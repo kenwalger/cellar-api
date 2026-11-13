@@ -17,4 +17,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - pytest suite covering the endpoints and the data layer.
 - GitHub Actions CI that runs Ruff lint, the Ruff format check, and pytest.
 - Project documentation: README, CLAUDE.md, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, architecture, roadmap, and learning-lab outline.
-- Placeholder directories for the planned course script (`course/`) and Apps Script tooling (`apps-script/`).
+- Master course script `course/master-script.md` for *Understanding APIs: A Winery's Digital Cellar*: two stages of three videos each, with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]` sections and `[ACTION]`, `[VISUAL]`, `[VOICEOVER]`, `[HIGHLIGHT]`, and `[PAUSE]` annotations. Every API example was checked against the implementation. Stage 2, Video 2 is deliberately long, for testing the long-video threshold.
+- Script grammar, annotation conventions, and Google Docs portability rules in `course/README.md`.
+- Independently authored structural oracle `course/fixtures/expected-structure.json`.
+- Four isolated malformed-script cases in `course/fixtures/malformed-script.md` (missing closing tag, unexpected closing tag, nested section, unknown annotation), with their expected failures documented in `course/fixtures/README.md`.
+- Placeholder directory for the planned Apps Script tooling (`apps-script/`).
+
+### Changed
+
+- `docs/architecture.md`, `docs/roadmap.md`, `docs/learning-lab.md`, and `README.md` updated for Phase 2. They now describe the master script as the authoritative source, mark Phase 2 complete, and outline a planned Exercise 3.

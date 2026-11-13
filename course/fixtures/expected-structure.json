@@ -1,0 +1,46 @@
+{
+  "stages": [
+    {
+      "number": 1,
+      "title": "Understanding the Interface",
+      "videos": [
+        {
+          "number": 1,
+          "title": "What Is an API?",
+          "sections": ["ONSET", "MOTION"]
+        },
+        {
+          "number": 2,
+          "title": "Requests and Responses",
+          "sections": ["ONSET", "SCREENCAST"]
+        },
+        {
+          "number": 3,
+          "title": "Understanding JSON",
+          "sections": ["MOTION", "SCREENCAST"]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Working with an API",
+      "videos": [
+        {
+          "number": 1,
+          "title": "Making API Requests",
+          "sections": ["ONSET", "SCREENCAST"]
+        },
+        {
+          "number": 2,
+          "title": "Handling Errors",
+          "sections": ["ONSET", "MOTION", "SCREENCAST", "ONSET"]
+        },
+        {
+          "number": 3,
+          "title": "Wrapping Up",
+          "sections": ["ONSET"]
+        }
+      ]
+    }
+  ]
+}

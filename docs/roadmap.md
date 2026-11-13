@@ -1,6 +1,6 @@
 # Roadmap
 
-Four milestones. Each phase builds on the previous one, and only Phase 1 is complete.
+Four milestones. Each phase builds on the previous one. Phases 1 and 2 are complete.
 
 ## Phase 1: Repository and API ✅
 
@@ -11,14 +11,15 @@ Build the FastAPI application, mock data, tests, and documentation.
 - pytest suite, Ruff, and GitHub Actions CI
 - README, CLAUDE.md, community files, and architecture notes
 
-## Phase 2: Master course script (planned)
+## Phase 2: Master course script ✅
 
 Write the fictional six-video course *Understanding APIs: A Winery's Digital Cellar*, organized into two stages of three videos each.
 
-- Tag each section `[ONSET]`, `[MOTION]`, or `[SCREENCAST]`.
-- Use the Phase 1 API as the subject of the screencast segments.
-- Include one deliberately long video so the production-summary threshold can be tested.
-- Keep the script in a format that can be reproduced as a Google Doc. Sample fixtures go in `course/`.
+- Master script in [`course/master-script.md`](../course/master-script.md), with sections tagged `[ONSET]`, `[MOTION]`, or `[SCREENCAST]` and internal annotations documented in [`course/README.md`](../course/README.md)
+- Screencast segments that use the Phase 1 API, with every example checked against the implementation
+- Stage 2, Video 2 (*Handling Errors*) deliberately long, so the Production Summary's three-minute threshold can be tested
+- Plain-text structure that survives copying into Google Docs
+- An independently authored structural oracle (`course/fixtures/expected-structure.json`) and four isolated malformed cases (`course/fixtures/malformed-script.md`)
 
 ## Phase 3: Document parser (planned)
 

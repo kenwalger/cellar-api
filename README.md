@@ -13,15 +13,17 @@ To be clear about what's what:
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 1.** Only the repository foundation and the FastAPI application exist today. The course script, document parser, Apps Script tooling, and production summary are planned, not built. See [docs/roadmap.md](docs/roadmap.md).
+> **Status: Phase 2 complete.** The FastAPI application and the master course script exist today. The document parser, Apps Script tooling, and Production Summary are planned, not built. See [docs/roadmap.md](docs/roadmap.md).
 
-## What's in Phase 1
+## What's in the repository
 
 - A read-only FastAPI app with three endpoints.
 - 12 fictional wine production batches in a JSON file, validated with Pydantic.
 - A pytest suite covering the endpoints and the data layer.
 - Ruff linting and formatting, run in GitHub Actions.
-- Project documentation and placeholder directories for later phases.
+- A six-video master course script, [`course/master-script.md`](course/master-script.md), tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]` sections. See [course/README.md](course/README.md) for its grammar.
+- Parser test fixtures: an expected-structure oracle and isolated malformed-script cases in [`course/fixtures/`](course/fixtures/).
+- Project documentation and a placeholder directory for the Apps Script tooling.
 
 ## Architecture
 
@@ -169,8 +171,8 @@ The tests use FastAPI's `TestClient`, so they don't need a running server.
 
 ## Roadmap
 
-1. **Phase 1: Repository and API** (current)
-2. **Phase 2: Master course script**, a six-video course tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`
+1. **Phase 1: Repository and API** (done)
+2. **Phase 2: Master course script** (done), a six-video course tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`
 3. **Phase 3: Document parser**, Google Apps Script that validates the master doc and generates the three section docs
 4. **Phase 4: Production summary and learning lab**
 

@@ -1,6 +1,12 @@
 # Architecture
 
-This document has two parts: the **implemented** API (Phase 1) and the **planned** document automation workflow (Phases 3 and 4). Only the first part exists in code.
+This document has three parts:
+
+1. The **implemented** API (Phase 1).
+2. The **written** master script and its fixtures (Phase 2).
+3. The **planned** document automation workflow (Phases 3 and 4).
+
+Only the API exists as code. The script and fixtures are content that no code reads yet.
 
 ## Part 1: Implemented API
 
@@ -29,9 +35,20 @@ flowchart LR
 - **The output is deterministic.** Results are sorted by `batch_id`, and nothing depends on time, randomness, or the network.
 - **Status filtering uses an enum.** FastAPI validates `?status=` against `BatchStatus`, so it returns 422 for unsupported values automatically, and the allowed values appear in the OpenAPI schema.
 
-## Part 2: Planned document automation workflow (not implemented)
+## Part 2: The master script (implemented as content)
 
-The learning lab's real goal is to turn a master course script into several production documents. The planned pipeline:
+[`course/master-script.md`](../course/master-script.md) is the **authoritative source** for every production document. It's plain text built around literal stage and video headings, `[ONSET]` / `[MOTION]` / `[SCREENCAST]` sections, and internal annotations. The full grammar is in [`course/README.md`](../course/README.md#script-grammar).
+
+Two fixtures support the planned parser:
+
+- [`course/fixtures/expected-structure.json`](../course/fixtures/expected-structure.json): the expected stages, videos, and section order, written independently of the script.
+- [`course/fixtures/malformed-script.md`](../course/fixtures/malformed-script.md): isolated invalid cases, with their expected failures documented in [`course/fixtures/README.md`](../course/fixtures/README.md).
+
+The script and fixtures exist. No code reads them yet.
+
+## Part 3: Planned document automation workflow (not implemented)
+
+The learning lab's real goal is to turn the master course script into several production documents. The planned pipeline:
 
 ```mermaid
 flowchart TD
@@ -51,5 +68,11 @@ flowchart TD
 4. **Structural validation**: reports problems such as unknown or missing tags, empty sections, or unexpected ordering.
 5. **Generators**: produce the three section-specific documents and a Production Summary with approximate video durations and a configurable long-video warning.
 6. **Generation manifest**: records what was generated, from which source, and any validation findings.
+
+### Source of truth and regeneration
+
+- **One direction only.** Changes go into the master Google Doc. Generated documents are derivative outputs and are never edited to change the course.
+- **No synchronization.** Generated documents aren't kept in sync with the master. If the master changes after generation, the existing outputs stay as they were.
+- **Regeneration creates a new set.** Running the generator again produces a new, identifiable set of four documents with its own generation manifest. It doesn't update the previous set in place, so you can always tell which version of the master a set came from.
 
 These details are intent, not a specification, and may change during Phases 3 and 4.

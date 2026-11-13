@@ -13,11 +13,11 @@ The fictional course is *Understanding APIs: A Winery's Digital Cellar*. The Fas
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Repository foundation, FastAPI app, mock data, tests, docs | **Implemented** |
-| 2 | Master course script (six videos) | Planned, not started |
+| 2 | Master course script (six videos), structure oracle, malformed fixtures | **Implemented** (content only; no code reads it yet) |
 | 3 | Google Apps Script document parser | Planned, not started |
 | 4 | Production Summary doc and learning lab | Planned, not started |
 
-`course/`, `apps-script/`, and `docs/screenshots/` contain placeholders only. Don't describe planned work as done, and don't claim an unimplemented feature works.
+`apps-script/` and `docs/screenshots/` contain placeholders only. `course/` holds the master script and parser fixtures. Its grammar is defined in `course/README.md`. If the API's behavior changes, recheck the script's examples against it. Don't regenerate `course/fixtures/expected-structure.json` from the script, because it's an independent oracle. Don't describe planned work as done, and don't claim an unimplemented feature works.
 
 ## Commands
 
@@ -41,7 +41,10 @@ api/
 tests/
   test_api.py         Endpoint tests (TestClient, no running server)
   test_repository.py  Data-layer tests, independent of HTTP
-course/            Phase 2 placeholder
+course/
+  master-script.md   Authoritative six-video course script (plain-text grammar)
+  README.md          Section and annotation grammar, outline, recording setup
+  fixtures/          expected-structure.json oracle; malformed-script.md cases
 apps-script/       Phase 3 placeholder
 docs/              architecture.md, roadmap.md, learning-lab.md, screenshots/
 .github/           CI workflow, issue and PR templates
