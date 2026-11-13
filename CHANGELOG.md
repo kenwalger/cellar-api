@@ -21,8 +21,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Script grammar, annotation conventions, and Google Docs portability rules in `course/README.md`.
 - Independently authored structural oracle `course/fixtures/expected-structure.json`.
 - Four isolated malformed-script cases in `course/fixtures/malformed-script.md` (missing closing tag, unexpected closing tag, nested section, unknown annotation), with their expected failures documented in `course/fixtures/README.md`.
+- Portable JavaScript parser in `parser/` (Phase 3A):
+  - `parseProductionScript(sourceText)` returns a deterministic IR (stages, videos, sections in authored order, typed annotation blocks, `PAUSE` cues, verbatim text, source line numbers) and diagnostics.
+  - Seventeen stable diagnostic codes for structural errors and document checks, sorted by line, with conservative error recovery documented in `parser/README.md`.
+  - A host-neutral core (`src/production-script.cjs`) with no module syntax or Node/browser APIs, an ESM wrapper, and a `print-ir` inspection script.
+  - `node:test` suites: master-script acceptance against `course/fixtures/expected-structure.json`, each malformed fixture case, IR and grammar edge cases, diagnostics, and an isolated-`vm` portability check. No npm dependencies.
 - Placeholder directory for the planned Apps Script tooling (`apps-script/`).
 
 ### Changed
 
+- CI gains a `parser` job (Node.js 22, `npm test`). The Python job is unchanged.
+- `.editorconfig` uses two-space indentation for JavaScript.
+- `README.md`, `CLAUDE.md`, `docs/architecture.md`, `docs/roadmap.md`, and `docs/learning-lab.md` updated for Phase 3A. They describe the implemented parser, the JavaScript conventions, and a planned parser exercise. Phase 3B and Phase 4 remain planned.
 - `docs/architecture.md`, `docs/roadmap.md`, `docs/learning-lab.md`, and `README.md` updated for Phase 2. They now describe the master script as the authoritative source, mark Phase 2 complete, and outline a planned Exercise 3.

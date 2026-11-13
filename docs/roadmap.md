@@ -1,6 +1,6 @@
 # Roadmap
 
-Four milestones. Each phase builds on the previous one. Phases 1 and 2 are complete.
+Four milestones. Each phase builds on the previous one. Phases 1, 2, and 3A are complete.
 
 ## Phase 1: Repository and API ✅
 
@@ -21,12 +21,22 @@ Write the fictional six-video course *Understanding APIs: A Winery's Digital Cel
 - Plain-text structure that survives copying into Google Docs
 - An independently authored structural oracle (`course/fixtures/expected-structure.json`) and four isolated malformed cases (`course/fixtures/malformed-script.md`)
 
-## Phase 3: Document parser (planned)
+## Phase 3: Document parser
+
+### Phase 3A: Portable parser and validation ✅
+
+- Dependency-free JavaScript parser in [`parser/`](../parser) that turns script text into a deterministic IR with source line numbers
+- Structural diagnostics with stable codes, line numbers, and conservative error recovery
+- Node.js tests (`node:test`): the master script matches `course/fixtures/expected-structure.json`, and each malformed case reports its documented first error
+- A portable core with no module system or host APIs, checked in an isolated `vm` context but not yet in Google Apps Script
+- CI runs the parser tests alongside the Python checks
+
+### Phase 3B: Google Docs integration (planned)
 
 Build Google Apps Script tooling, in `apps-script/`, that:
 
-- Reads a master Google Doc.
-- Validates its structure and reports findings.
+- Reads a master Google Doc and passes its text to the portable parser.
+- Reports validation findings before generating anything.
 - Generates separate ONSET, MOTION, and SCREENCAST Google Docs.
 
 ## Phase 4: Production summary and learning lab (planned)

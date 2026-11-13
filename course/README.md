@@ -1,6 +1,6 @@
 # course/
 
-This directory holds the master production script for the fictional course **Understanding APIs: A Winery's Digital Cellar**, plus the fixtures that the Phase 3 parser will be tested against.
+This directory holds the master production script for the fictional course **Understanding APIs: A Winery's Digital Cellar**, plus the fixtures that the parser in [`parser/`](../parser) is tested against.
 
 | File | Purpose |
 |---|---|
@@ -37,13 +37,13 @@ Stage 2, Video 2 is deliberately the longest video. It covers 200, 404, and 422 
 
 ## Script grammar
 
-The parser must be able to find every structural element from **literal text on its own line**, without understanding Markdown. Matching ignores leading and trailing whitespace on a line, and blank lines carry no meaning.
+The parser must be able to find every structural element from **literal text on its own line**, without understanding Markdown. Matching ignores leading and trailing whitespace on a line. Blank lines carry no structural meaning, although the parser keeps blank lines inside content as paragraph breaks.
 
 ### Document structure
 
 | Element | Literal form | Rules |
 |---|---|---|
-| Front matter | Any text before the first stage heading | Not part of any video. Ignored by the parser. |
+| Front matter | Any text before the first stage heading | Not part of any video. The parser keeps it separately (`frontMatter`) and doesn't apply section rules to it. |
 | Stage heading | `Stage N: Title` | Must appear outside production sections. The script has exactly two stages, numbered from 1. |
 | Video heading | `Video N: Title` | Must follow a stage heading and appear outside production sections. Each stage has exactly three videos, numbered from 1 within the stage. |
 | Section open | `[ONSET]`, `[MOTION]`, `[SCREENCAST]` | Must be inside a video and on its own line. |
@@ -128,11 +128,11 @@ The screencasts use Swagger UI at `http://127.0.0.1:8000/docs`. The 422 demonstr
 
 ## Planned production artifacts (not implemented)
 
-In Phases 3 and 4, a parser will read the master script as a Google Doc and generate:
+The parser in [`parser/`](../parser) (Phase 3A) already reads and validates the script as plain text in Node.js. In Phases 3B and 4, Google Apps Script tooling will read the master script from a Google Doc and generate:
 
 - **ONSET**: presenter narration for the teleprompter.
 - **MOTION**: visual instructions and voiceover for the motion designer.
 - **SCREENCAST**: actions and voiceover for the screen recording.
 - **Production Summary**: estimated duration per video, content statistics, a configurable long-video warning (default three minutes), and validation findings.
 
-None of this exists yet. See [`docs/roadmap.md`](../docs/roadmap.md).
+None of these documents exists yet. See [`docs/roadmap.md`](../docs/roadmap.md).

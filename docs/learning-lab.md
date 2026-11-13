@@ -1,6 +1,6 @@
 # Learning Lab (outline)
 
-> **Status: planned.** This is an outline for a future hands-on tutorial. Only the exercises marked *available now* can be done today. The master script for Exercise 3 exists, but its guided exercise is not written yet. The other exercises depend on work in Phases 3 and 4.
+> **Status: planned.** This is an outline for a future hands-on tutorial. Only the exercises marked *available now* can be done today. The master script for Exercise 3 exists, but its guided exercise is not written yet. The parser for Exercise 4 also exists, and its walkthrough is also unwritten. The other exercises depend on work in Phases 3B and 4.
 
 ## Learning objectives
 
@@ -32,8 +32,9 @@ By the end of the lab, a learner should be able to:
 | 1 | Run the Digital Cellar API locally and explore it in Swagger UI | Available now |
 | 2 | Read the tests and add one for a new edge case | Available now |
 | 3 | Explore the structured master script (see below) | Planned. The script exists; the guided exercise isn't written yet. |
-| 4 | Install the Apps Script parser and run it against the master doc | Planned (Phase 3) |
-| 5 | Break the document structure on purpose and read the validation findings | Planned (Phase 3) |
+| 4 | Parse the master script locally and break it on purpose (see below) | Planned. The parser exists; the guided exercise isn't written yet. |
+| 4b | Install the Apps Script adapter and run it against the master Google Doc | Planned (Phase 3B) |
+| 5 | Break the Google Doc's structure on purpose and read the validation findings | Planned (Phase 3B) |
 | 6 | Generate the Production Summary and adjust the long-video threshold | Planned (Phase 4) |
 | 7 | Inspect the generation manifest | Planned (Phase 4) |
 
@@ -46,9 +47,21 @@ Planned steps:
 1. Find the stage and video headings (`Stage N: Title`, `Video N: Title`) and match them to the outline in [`course/README.md`](../course/README.md).
 2. For one video, list its production sections in order and compare the list with [`course/fixtures/expected-structure.json`](../course/fixtures/expected-structure.json).
 3. Inside a MOTION or SCREENCAST section, sort the content into spoken (`[VOICEOVER]`) and non-spoken (`[VISUAL]`, `[ACTION]`, `[HIGHLIGHT]`) material.
-4. Predict what each generated document will contain, then check the predictions in Exercises 4 to 6 once those exist.
+4. Predict what each generated document will contain, then check the predictions once document generation exists.
 
 How the tags will drive generation (planned, not implemented): each top-level tag decides which document a section goes to. `[ONSET]` content will go to the ONSET teleprompter document, `[MOTION]` to the MOTION document, and `[SCREENCAST]` to the SCREENCAST document, keeping the original video and section order. The Production Summary will use the spoken content (ONSET prose and `[VOICEOVER]` blocks) to estimate each video's length. Document generation doesn't exist yet.
+
+### Exercise 4: Parse the master script and break it (planned)
+
+This works today with Node.js 22 or newer. The written walkthrough is still planned.
+
+1. **Inspect the master script.** Open [`course/master-script.md`](../course/master-script.md) and pick a video, such as Stage 2, Video 2.
+2. **Run the parser tests.** Run `cd parser` and then `npm test`, and note which tests compare the master script with `course/fixtures/expected-structure.json`.
+3. **Examine the IR.** Run `npm run print-ir -- ../course/master-script.md`, and find the chosen video's sections, blocks, cues, and `sourceLine` values. Confirm that the section order is ONSET, MOTION, SCREENCAST, ONSET.
+4. **Introduce a malformed tag.** In a copy of the script, delete one closing tag such as `[/MOTION]`, or rename a `[VOICEOVER]` to `[NARRATION]`.
+5. **Observe the diagnostic.** Run `print-ir` on the copy. It exits with status 1. Read the first diagnostic's `code` and `line`, then compare them with the table in [`parser/README.md`](../parser/README.md#diagnostics).
+
+Generating Google Docs isn't possible yet. This exercise stops at the IR and diagnostics.
 
 ## Evidence and screenshot checklist
 
@@ -62,7 +75,10 @@ Capture these as the lab is built, and store them in `docs/screenshots/`:
 - [ ] The master script pasted into Google Docs (Phase 2 content, exercise planned)
 - [ ] A close-up of production tags and internal annotations in the Google Doc
 - [ ] Swagger UI next to the matching SCREENCAST instructions in the script
-- [ ] Apps Script project and its run log (Phase 3)
+- [ ] Passing `npm test` output for the parser (Phase 3A)
+- [ ] `print-ir` output for one video, showing sections, blocks, and line numbers (Phase 3A)
+- [ ] A diagnostic produced by a deliberately broken copy of the script (Phase 3A)
+- [ ] Apps Script project and its run log (Phase 3B)
 - [ ] Each of the four generated documents (Phases 3 and 4)
 - [ ] A Production Summary with a long-video warning (Phase 4)
 - [ ] Validation findings for a deliberately malformed script (Phase 3)

@@ -1,6 +1,6 @@
 # course/fixtures/
 
-Test fixtures for the planned Phase 3 parser. The grammar they test is defined in [`../README.md`](../README.md#script-grammar).
+Test fixtures for the parser in [`parser/`](../../parser), which `parser/tests/fixtures.test.js` runs against them. The grammar they test is defined in [`../README.md`](../README.md#script-grammar).
 
 ## expected-structure.json
 

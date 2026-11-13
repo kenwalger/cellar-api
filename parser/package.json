@@ -1,0 +1,16 @@
+{
+  "name": "production-script-parser",
+  "version": "0.1.0",
+  "description": "Portable parser and validator for the Digital Cellar master production script.",
+  "private": true,
+  "license": "MIT",
+  "author": "Ken W. Alger",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "print-ir": "node src/print-ir.js"
+  }
+}

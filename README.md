@@ -13,7 +13,7 @@ To be clear about what's what:
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 2 complete.** The FastAPI application and the master course script exist today. The document parser, Apps Script tooling, and Production Summary are planned, not built. See [docs/roadmap.md](docs/roadmap.md).
+> **Status: Phase 3A complete.** The FastAPI application, the master course script, and a portable JavaScript parser that validates the script exist today. The parser runs in Node.js. The Google Apps Script integration, document generation, and Production Summary are planned, not built. See [docs/roadmap.md](docs/roadmap.md).
 
 ## What's in the repository
 
@@ -23,6 +23,7 @@ To be clear about what's what:
 - Ruff linting and formatting, run in GitHub Actions.
 - A six-video master course script, [`course/master-script.md`](course/master-script.md), tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]` sections. See [course/README.md](course/README.md) for its grammar.
 - Parser test fixtures: an expected-structure oracle and isolated malformed-script cases in [`course/fixtures/`](course/fixtures/).
+- A dependency-free JavaScript parser, [`parser/`](parser/README.md). It turns the script into a structured intermediate representation with source line numbers, reports structural problems as diagnostics, and is tested with Node's built-in test runner.
 - Project documentation and a placeholder directory for the Apps Script tooling.
 
 ## Architecture
@@ -34,14 +35,19 @@ api/
 ├── main.py         FastAPI app and routes (HTTP only)
 └── data/
     └── batches.json
+parser/
+├── src/production-script.cjs   portable parser core (no Node or browser APIs)
+├── src/index.js                Node.js ESM entry point
+└── tests/                      node:test suites
 ```
 
-Routes in `main.py` call plain functions in `repository.py`. The repository has no HTTP dependencies, so it can be tested on its own. See [docs/architecture.md](docs/architecture.md) for more detail and for the planned document workflow.
+Routes in `main.py` call plain functions in `repository.py`. The repository has no HTTP dependencies, so it can be tested on its own. The parser is independent of the API. It reads production-script text and returns an IR and diagnostics. See [docs/architecture.md](docs/architecture.md) for more detail and for the planned Google Docs workflow.
 
 ## Prerequisites
 
 - Python 3.11 or newer (`.python-version` pins 3.12 for local development)
 - [uv](https://docs.astral.sh/uv/)
+- Node.js 22 or newer, for the parser only. There are no npm packages to install.
 
 You don't need a database, a network connection, or any external service.
 
@@ -163,17 +169,30 @@ uv run ruff format .        # apply formatting
 
 The tests use FastAPI's `TestClient`, so they don't need a running server.
 
+### Parser
+
+```bash
+cd parser
+npm test                                          # run the parser tests
+npm run print-ir -- ../course/master-script.md    # print the IR and diagnostics as JSON
+```
+
+See [parser/README.md](parser/README.md) for the IR, the diagnostic codes, and error recovery.
+
 ## Limitations
 
 - The data is read from a static JSON file. Edits take effect only after a restart.
 - There's no authentication, persistence, pagination, or write access. These are deliberate omissions for a teaching fixture.
-- The document automation workflow described above does not exist yet.
+- The parser runs in Node.js only. It hasn't been run in Google Apps Script, and nothing reads or writes Google Docs yet.
+- The ONSET, MOTION, SCREENCAST, and Production Summary documents are not generated yet.
 
 ## Roadmap
 
 1. **Phase 1: Repository and API** (done)
 2. **Phase 2: Master course script** (done), a six-video course tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`
-3. **Phase 3: Document parser**, Google Apps Script that validates the master doc and generates the three section docs
+3. **Phase 3: Document parser**
+   - **3A: Portable parser and validation** (done)
+   - **3B: Google Docs integration** (planned): an Apps Script adapter and generation of the three section docs
 4. **Phase 4: Production summary and learning lab**
 
 Details are in [docs/roadmap.md](docs/roadmap.md). The planned hands-on tutorial is outlined in [docs/learning-lab.md](docs/learning-lab.md).

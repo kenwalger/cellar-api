@@ -13,8 +13,9 @@ The fictional course is *Understanding APIs: A Winery's Digital Cellar*. The Fas
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Repository foundation, FastAPI app, mock data, tests, docs | **Implemented** |
-| 2 | Master course script (six videos), structure oracle, malformed fixtures | **Implemented** (content only; no code reads it yet) |
-| 3 | Google Apps Script document parser | Planned, not started |
+| 2 | Master course script (six videos), structure oracle, malformed fixtures | **Implemented** (content) |
+| 3A | Portable JavaScript parser, IR, diagnostics, Node tests (`parser/`) | **Implemented** (Node.js only; not yet run in Apps Script) |
+| 3B | Google Apps Script adapter and ONSET/MOTION/SCREENCAST generation | Planned, not started |
 | 4 | Production Summary doc and learning lab | Planned, not started |
 
 `apps-script/` and `docs/screenshots/` contain placeholders only. `course/` holds the master script and parser fixtures. Its grammar is defined in `course/README.md`. If the API's behavior changes, recheck the script's examples against it. Don't regenerate `course/fixtures/expected-structure.json` from the script, because it's an independent oracle. Don't describe planned work as done, and don't claim an unimplemented feature works.
@@ -28,6 +29,9 @@ uv run pytest                          # run tests
 uv run ruff check .                    # lint
 uv run ruff format --check .           # check formatting (CI runs this)
 uv run ruff format .                   # apply formatting
+
+cd parser && npm test                  # parser tests (Node.js 22+, no npm install needed)
+cd parser && npm run print-ir -- ../course/master-script.md   # print IR + diagnostics as JSON
 ```
 
 ## Repository layout
@@ -45,7 +49,12 @@ course/
   master-script.md   Authoritative six-video course script (plain-text grammar)
   README.md          Section and annotation grammar, outline, recording setup
   fixtures/          expected-structure.json oracle; malformed-script.md cases
-apps-script/       Phase 3 placeholder
+parser/
+  src/production-script.cjs  Portable core: parser, document checks, diagnostics (one global)
+  src/index.js               ESM wrapper for Node.js
+  src/print-ir.js            Prints parse result for a file
+  tests/                     node:test suites (fixtures, parser, validator, portability)
+apps-script/       Phase 3B placeholder
 docs/              architecture.md, roadmap.md, learning-lab.md, screenshots/
 .github/           CI workflow, issue and PR templates
 ```
@@ -68,11 +77,22 @@ docs/              architecture.md, roadmap.md, learning-lab.md, screenshots/
 - Use descriptive names and short functions, and add docstrings where they help a beginner.
 - Ruff settings live in `pyproject.toml`. Code must pass `ruff check` and `ruff format --check`.
 
+### JavaScript (parser/)
+
+- Node.js 22+ for development. Use `node:test` and `node:assert/strict`. Don't add npm dependencies, build tools, bundlers, or TypeScript without approval.
+- **The portable core, `parser/src/production-script.cjs`, must stay host-neutral.** It's a classic script that defines a single global, `ProductionScript`, plus the CommonJS guard at the end. Don't use `import`/`export`, `require`, `fs`, `path`, `process`, `Buffer`, `globalThis`, or browser APIs in it. `tests/portability.test.js` enforces this.
+- Use a conservative set of language features in the core, for Google Apps Script V8: `const`/`let`, arrow functions, and template literals. Don't use `?.`, `??`, or newer built-ins. Node-only code (`src/index.js`, `src/print-ir.js`, `tests/`) can use modern Node features.
+- Keep the parser line-oriented, with explicit state. Don't parse the whole document with one large regular expression.
+- Malformed input returns diagnostics and never throws. Only invalid API use, such as a non-string argument, throws `TypeError`. Never silently repair, auto-close, or invent structure.
+- Diagnostic `code` values are a stable contract. Tests assert on `code`, `severity`, and `line`, never on the full `message`. If you add a code, document it in `parser/README.md`.
+- Preserve source text verbatim in the IR. Only line endings are normalized.
+- Two-space indentation (see `.editorconfig`). There's no JS formatter, so match the existing style.
+
 ## Deterministic behavior
 
 - Batch listings are always sorted by `batch_id`.
 - The dataset must stay at exactly 12 batches, with unique IDs and at least one `null` temperature. Tests enforce this. If you change the count, update the tests and docs in the same change, and only with approval.
-- No randomness, clocks, or network calls in the API or tests.
+- No randomness, clocks, or network calls in the API, the parser, or tests. The parser's output must be identical for identical input.
 - Mock data is illustrative. Don't add winemaking science or claims about ideal temperatures.
 
 ## Scope boundaries
@@ -96,7 +116,8 @@ Don't start a later phase's work unless asked.
 - Every behavior change comes with a test. Write the test first where practical.
 - Tests must not need a running server, network access, or a database.
 - Test data-layer behavior in `test_repository.py` and HTTP behavior in `test_api.py`.
-- Run `uv run pytest`, `uv run ruff check .`, and `uv run ruff format --check .` before you report work as done.
+- Parser tests go in `parser/tests/`. Acceptance tests must use `course/fixtures/` as the oracle. Never regenerate a fixture from parser output.
+- Run `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`, and `npm test` in `parser/` before you report work as done.
 - **Never invent or paraphrase test results.** Report only what you actually ran, including failures. If you skipped a check, say so.
 
 ## Authorship and attribution
@@ -109,15 +130,15 @@ Don't start a later phase's work unless asked.
 
 When behavior changes, update in the same change: `README.md` (endpoints, examples), this file (status, layout), `docs/architecture.md`, and `CHANGELOG.md` (Unreleased). Example responses in the README must match real API output.
 
-## Planned document automation architecture (not implemented)
+## Document automation architecture
 
-Phases 3 and 4 plan the following pipeline. **None of it exists yet.**
+Steps 2 to 4 below exist as the portable parser in `parser/` (Phase 3A), tested in Node.js only. Steps 1, 5, and 6, and running the parser inside Google Apps Script, are **planned and don't exist yet**.
 
 1. **Master Google Doc**: the authored course script, with sections tagged `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`.
-2. **Structured document parser**: Google Apps Script that reads the doc's headings, tags, and body.
-3. **Intermediate representation**: a plain data structure (course → videos → tagged sections) that separates parsing from output.
-4. **Structural validation**: checks for missing or unknown tags, empty sections, out-of-order videos, and similar problems. Findings are reported, not silently fixed.
-5. **Four output generators**: ONSET, MOTION, and SCREENCAST docs, plus a Production Summary with approximate durations, content statistics, and a configurable long-video threshold.
-6. **Generation manifest**: a record of what was generated, from which source, and any validation findings.
+2. **Structured document parser**: the portable core is implemented. A planned Apps Script adapter will feed it the doc's text.
+3. **Intermediate representation**: implemented. Stages → videos → sections → blocks, cues, and text, with source lines. See `parser/README.md`.
+4. **Structural validation**: implemented as diagnostics with stable codes. Findings are reported, not silently fixed.
+5. **Four output generators** *(planned)*: ONSET, MOTION, and SCREENCAST docs, plus a Production Summary with approximate durations, content statistics, and a configurable long-video threshold.
+6. **Generation manifest** *(planned)*: a record of what was generated, from which source, and any validation findings.
 
-The design may change when it's implemented. Treat this section as intent, not a spec.
+The planned steps may change when they're implemented. Treat them as intent, not a spec.
