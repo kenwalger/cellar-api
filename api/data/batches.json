@@ -1,0 +1,110 @@
+[
+  {
+    "batch_id": "2025-003",
+    "name": "Hillside Cabernet Sauvignon",
+    "varietal": "Cabernet Sauvignon",
+    "vintage": 2025,
+    "status": "aging",
+    "temperature_c": 15.2,
+    "days_since_start": 412
+  },
+  {
+    "batch_id": "2025-007",
+    "name": "River Bend Chardonnay",
+    "varietal": "Chardonnay",
+    "vintage": 2025,
+    "status": "bottled",
+    "temperature_c": 13.0,
+    "days_since_start": 365
+  },
+  {
+    "batch_id": "2025-011",
+    "name": "Cellar Door Merlot",
+    "varietal": "Merlot",
+    "vintage": 2025,
+    "status": "aging",
+    "temperature_c": 14.8,
+    "days_since_start": 398
+  },
+  {
+    "batch_id": "2025-018",
+    "name": "Morning Fog Riesling",
+    "varietal": "Riesling",
+    "vintage": 2025,
+    "status": "bottled",
+    "temperature_c": 12.5,
+    "days_since_start": 340
+  },
+  {
+    "batch_id": "2026-002",
+    "name": "Stone Wall Syrah",
+    "varietal": "Syrah",
+    "vintage": 2026,
+    "status": "aging",
+    "temperature_c": 16.1,
+    "days_since_start": 54
+  },
+  {
+    "batch_id": "2026-005",
+    "name": "East Terrace Chardonnay",
+    "varietal": "Chardonnay",
+    "vintage": 2026,
+    "status": "fermenting",
+    "temperature_c": 17.3,
+    "days_since_start": 12
+  },
+  {
+    "batch_id": "2026-009",
+    "name": "Old Vine Merlot",
+    "varietal": "Merlot",
+    "vintage": 2026,
+    "status": "fermenting",
+    "temperature_c": 24.0,
+    "days_since_start": 6
+  },
+  {
+    "batch_id": "2026-014",
+    "name": "North Block Pinot Noir",
+    "varietal": "Pinot Noir",
+    "vintage": 2026,
+    "status": "fermenting",
+    "temperature_c": 21.4,
+    "days_since_start": 8
+  },
+  {
+    "batch_id": "2026-021",
+    "name": "South Slope Pinot Noir",
+    "varietal": "Pinot Noir",
+    "vintage": 2026,
+    "status": "aging",
+    "temperature_c": 14.9,
+    "days_since_start": 47
+  },
+  {
+    "batch_id": "2026-025",
+    "name": "Late Harvest Riesling",
+    "varietal": "Riesling",
+    "vintage": 2026,
+    "status": "fermenting",
+    "temperature_c": null,
+    "days_since_start": 3
+  },
+  {
+    "batch_id": "2027-001",
+    "name": "Ridge Top Cabernet Sauvignon",
+    "varietal": "Cabernet Sauvignon",
+    "vintage": 2027,
+    "status": "planned",
+    "temperature_c": null,
+    "days_since_start": 0
+  },
+  {
+    "batch_id": "2027-002",
+    "name": "Barn Lot Syrah",
+    "varietal": "Syrah",
+    "vintage": 2027,
+    "status": "planned",
+    "temperature_c": null,
+    "days_since_start": 0
+  }
+]

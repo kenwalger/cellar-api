@@ -1,0 +1,21 @@
+prompts/
+commit-message.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Local agent tooling
+.aqg/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
