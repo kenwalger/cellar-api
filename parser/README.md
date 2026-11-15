@@ -2,7 +2,7 @@
 
 A portable JavaScript parser and validator for the master production script, [`course/master-script.md`](../course/master-script.md). It turns the script into a deterministic **intermediate representation (IR)** plus a list of **diagnostics**. Later phases will generate the ONSET, MOTION, SCREENCAST, and Production Summary documents from that IR.
 
-**Status: Phase 3A. Implemented and tested offline with Node.js.** There is no Google Docs integration, document generation, or timing estimation yet.
+**Status: Phase 3A. Implemented and tested offline with Node.js.** The Google Docs adapter that uses it is in [`apps-script/`](../apps-script) (Phase 3B). The parser itself doesn't estimate timing.
 
 ## Layout
 
@@ -184,12 +184,14 @@ The core, `src/production-script.cjs`, is written to run in Node.js now and in G
 
 `tests/portability.test.js` checks the source for module syntax and host globals. It also runs the core in an empty `node:vm` context, with no `module`, `require`, or `process`, and checks that the master script parses identically there. **That's an approximation. The parser has not yet been run in Google Apps Script.**
 
-### Planned Google Apps Script integration (Phase 3B, not implemented)
+### Google Apps Script integration (Phase 3B)
 
-1. Add the contents of `src/production-script.cjs` to the Apps Script project as one script file, without changes. Apps Script files share a global scope, so `ProductionScript.parseProductionScript` becomes available to the other files, and the CommonJS guard does nothing there.
-2. A thin Apps Script adapter will read the master Google Doc's paragraphs, join them with `\n`, and pass the text to `parseProductionScript`. It will report diagnostics before any generation starts.
-3. A test or check will confirm that the Apps Script copy is byte-for-byte identical to `src/production-script.cjs`, so the two can't drift apart.
-4. The parser will then be verified inside Apps Script itself, which hasn't been done yet.
+1. `scripts/sync-apps-script.mjs` copies this file byte for byte to `apps-script/ProductionScript.js`. Apps Script files share a global scope, so `ProductionScript.parseProductionScript` is available to the other script files, and the CommonJS guard does nothing there.
+2. The adapter in [`apps-script/`](../apps-script) reads the master Google Doc's paragraphs (splitting soft line breaks), joins them with newlines, and passes the text to `parseProductionScript`. It reports diagnostics before any generation starts.
+3. `node scripts/sync-apps-script.mjs --check`, run in CI, and `apps-script/tests/sync.test.js` fail if the copy differs from this file.
+4. **Running the parser inside Apps Script itself hasn't been verified yet.** That's part of the live checkpoint in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist).
+
+**After changing this file**, run `node scripts/sync-apps-script.mjs` and commit the regenerated `apps-script/` files with it.
 
 ## Known limitations
 

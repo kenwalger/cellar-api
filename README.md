@@ -13,7 +13,7 @@ To be clear about what's what:
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 3A complete.** The FastAPI application, the master course script, and a portable JavaScript parser that validates the script exist today. The parser runs in Node.js. The Google Apps Script integration, document generation, and Production Summary are planned, not built. See [docs/roadmap.md](docs/roadmap.md).
+> **Status: Phase 3B implemented.** The FastAPI application, the master course script, a portable JavaScript parser, and Google Apps Script tooling that generates the ONSET, MOTION, and SCREENCAST documents from a Google Doc exist today. Everything is tested offline. **The Apps Script tooling hasn't been run against a live Google account yet**; that's a manual checkpoint. The Production Summary is planned for Phase 4. See [docs/roadmap.md](docs/roadmap.md).
 
 ## What's in the repository
 
@@ -24,7 +24,8 @@ To be clear about what's what:
 - A six-video master course script, [`course/master-script.md`](course/master-script.md), tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]` sections. See [course/README.md](course/README.md) for its grammar.
 - Parser test fixtures: an expected-structure oracle and isolated malformed-script cases in [`course/fixtures/`](course/fixtures/).
 - A dependency-free JavaScript parser, [`parser/`](parser/README.md). It turns the script into a structured intermediate representation with source line numbers, reports structural problems as diagnostics, and is tested with Node's built-in test runner.
-- Project documentation and a placeholder directory for the Apps Script tooling.
+- A Google Apps Script project, [`apps-script/`](apps-script/README.md). It reads the master Google Doc, validates it with the unchanged parser, and generates ONSET, MOTION, and SCREENCAST Google Docs plus a provenance manifest in a new folder for each run. Its logic is tested offline with test doubles.
+- Project documentation.
 
 ## Architecture
 
@@ -41,13 +42,14 @@ parser/
 └── tests/                      node:test suites
 ```
 
-Routes in `main.py` call plain functions in `repository.py`. The repository has no HTTP dependencies, so it can be tested on its own. The parser is independent of the API. It reads production-script text and returns an IR and diagnostics. See [docs/architecture.md](docs/architecture.md) for more detail and for the planned Google Docs workflow.
+Routes in `main.py` call plain functions in `repository.py`. The repository has no HTTP dependencies, so it can be tested on its own. The parser is independent of the API. It reads production-script text and returns an IR and diagnostics. See [docs/architecture.md](docs/architecture.md) for more detail, including the Google Docs workflow.
 
 ## Prerequisites
 
 - Python 3.11 or newer (`.python-version` pins 3.12 for local development)
 - [uv](https://docs.astral.sh/uv/)
-- Node.js 22 or newer, for the parser only. There are no npm packages to install.
+- Node.js 22 or newer, for the parser and Apps Script tests only. There are no npm packages to install.
+- A Google account, only for running the Apps Script tooling in Google (see [apps-script/README.md](apps-script/README.md)).
 
 You don't need a database, a network connection, or any external service.
 
@@ -179,12 +181,21 @@ npm run print-ir -- ../course/master-script.md    # print the IR and diagnostics
 
 See [parser/README.md](parser/README.md) for the IR, the diagnostic codes, and error recovery.
 
+### Apps Script adapter
+
+```bash
+cd apps-script && npm test                       # adapter tests (offline, no Google account)
+node scripts/sync-apps-script.mjs --check        # parser copy and generated data match their sources
+```
+
+To run the tooling in Google, follow [apps-script/README.md](apps-script/README.md).
+
 ## Limitations
 
 - The data is read from a static JSON file. Edits take effect only after a restart.
 - There's no authentication, persistence, pagination, or write access. These are deliberate omissions for a teaching fixture.
-- The parser runs in Node.js only. It hasn't been run in Google Apps Script, and nothing reads or writes Google Docs yet.
-- The ONSET, MOTION, SCREENCAST, and Production Summary documents are not generated yet.
+- The Apps Script tooling is tested offline only. It hasn't been run against a real Google account yet (see the live checklist in [apps-script/README.md](apps-script/README.md#live-verification-checklist)).
+- The Production Summary document and duration estimates are not implemented yet (Phase 4).
 
 ## Roadmap
 
@@ -192,7 +203,7 @@ See [parser/README.md](parser/README.md) for the IR, the diagnostic codes, and e
 2. **Phase 2: Master course script** (done), a six-video course tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`
 3. **Phase 3: Document parser**
    - **3A: Portable parser and validation** (done)
-   - **3B: Google Docs integration** (planned): an Apps Script adapter and generation of the three section docs
+   - **3B: Google Docs integration** (implemented; live check pending): an Apps Script adapter and generation of the three section docs
 4. **Phase 4: Production summary and learning lab**
 
 Details are in [docs/roadmap.md](docs/roadmap.md). The planned hands-on tutorial is outlined in [docs/learning-lab.md](docs/learning-lab.md).

@@ -26,11 +26,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Seventeen stable diagnostic codes for structural errors and document checks, sorted by line, with conservative error recovery documented in `parser/README.md`.
   - A host-neutral core (`src/production-script.cjs`) with no module syntax or Node/browser APIs, an ESM wrapper, and a `print-ir` inspection script.
   - `node:test` suites: master-script acceptance against `course/fixtures/expected-structure.json`, each malformed fixture case, IR and grammar edge cases, diagnostics, and an isolated-`vm` portability check. No npm dependencies.
-- Placeholder directory for the planned Apps Script tooling (`apps-script/`).
+- Google Apps Script integration in `apps-script/` (Phase 3B):
+  - Manual entry points: `validateMasterDocument()` (read-only report of diagnostics, counts, and the structure check) and `generateProductionDocuments()`.
+  - `DocumentReader` extracts paragraphs as text lines, splitting soft line breaks and keeping a line→paragraph map. It reports tables, images, smart chips, extra tabs, and similar content as errors, and list formatting, page breaks, and rules as warnings.
+  - Validation runs the unchanged parser, maps diagnostics to document paragraphs, and, by default, requires an exact match with `course/fixtures/expected-structure.json`. Errors block generation and warnings don't.
+  - ONSET, MOTION, and SCREENCAST documents rendered verbatim in source order, with stage and video headings, `Part N of M` headings for repeated sections, and instructions styled differently from spoken narration.
+  - Each run creates a new `Digital Cellar Production — <UTC timestamp> — <run id>` folder with the three documents and a provenance `manifest.json` (schema version 1: source ID, URL, title, and last-updated time; extracted-text SHA-256; parser version and core hash; output IDs and URLs; counts; warnings; status).
+  - Partial failures throw, write a `"failed"` manifest, and rename the folder with ` — FAILED`. Nothing is deleted or reused.
+  - Script Properties configuration (`MASTER_DOCUMENT_ID`, `OUTPUT_FOLDER_ID`, `REQUIRE_EXPECTED_STRUCTURE`). There are no triggers.
+  - 67 offline `node:test` tests using Body and Drive test doubles. No npm dependencies.
+- `scripts/sync-apps-script.mjs` generates `apps-script/ProductionScript.js` (a byte-for-byte copy of the parser core) and `apps-script/GeneratedData.js`, and `--check` detects drift.
 
 ### Changed
 
 - CI gains a `parser` job (Node.js 22, `npm test`). The Python job is unchanged.
+- The CI `parser` job also runs the Apps Script adapter tests and the drift check.
+- `README.md`, `CLAUDE.md`, `docs/architecture.md`, `docs/roadmap.md`, `docs/learning-lab.md`, `parser/README.md`, and `course/README.md` updated for Phase 3B. Live Google Apps Script verification is listed as a pending manual checkpoint.
+- `.gitignore` excludes `apps-script/.clasp.json`.
 - `.editorconfig` uses two-space indentation for JavaScript.
 - `README.md`, `CLAUDE.md`, `docs/architecture.md`, `docs/roadmap.md`, and `docs/learning-lab.md` updated for Phase 3A. They describe the implemented parser, the JavaScript conventions, and a planned parser exercise. Phase 3B and Phase 4 remain planned.
 - `docs/architecture.md`, `docs/roadmap.md`, `docs/learning-lab.md`, and `README.md` updated for Phase 2. They now describe the master script as the authoritative source, mark Phase 2 complete, and outline a planned Exercise 3.

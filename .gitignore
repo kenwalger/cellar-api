@@ -11,6 +11,9 @@ __pycache__/
 build/
 dist/
 
+# Local clasp project link (contains your personal script ID)
+apps-script/.clasp.json
+
 # Local agent tooling
 .aqg/
 

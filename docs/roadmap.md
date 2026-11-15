@@ -1,6 +1,6 @@
 # Roadmap
 
-Four milestones. Each phase builds on the previous one. Phases 1, 2, and 3A are complete.
+Four milestones. Each phase builds on the previous one. Phases 1, 2, 3A, and 3B are complete in the repository. Phase 3B still needs a person to run it against a live Google account.
 
 ## Phase 1: Repository and API ✅
 
@@ -31,13 +31,20 @@ Write the fictional six-video course *Understanding APIs: A Winery's Digital Cel
 - A portable core with no module system or host APIs, checked in an isolated `vm` context but not yet in Google Apps Script
 - CI runs the parser tests alongside the Python checks
 
-### Phase 3B: Google Docs integration (planned)
+### Phase 3B: Google Docs integration ✅ (implementation; live check pending)
 
-Build Google Apps Script tooling, in `apps-script/`, that:
+Google Apps Script tooling in [`apps-script/`](../apps-script):
 
-- Reads a master Google Doc and passes its text to the portable parser.
-- Reports validation findings before generating anything.
-- Generates separate ONSET, MOTION, and SCREENCAST Google Docs.
+- Reads a master Google Doc, turns its paragraphs into text lines (splitting soft line breaks), and reports unsupported content such as tables, images, and extra tabs.
+- Runs the unchanged parser core. `apps-script/ProductionScript.js` is a byte-for-byte copy, checked in CI.
+- `validateMasterDocument()` logs diagnostics with line and paragraph locations, plus counts and the expected-structure check, and makes no writes.
+- `generateProductionDocuments()` stops on any error. Otherwise it creates a new timestamped run folder with ONSET, MOTION, and SCREENCAST Google Docs and a provenance `manifest.json`.
+- Failures are recorded in a `"failed"` manifest, and nothing is deleted. Each run is independent of earlier runs.
+
+**Verification status:**
+
+- **Automated, offline (done):** 67 Node tests for extraction, validation, rendering, the manifest, generation (with fake Drive and Docs services), configuration, portability, and the drift check. These are in addition to the 50 parser tests.
+- **Live Google Apps Script (not done yet):** a person must run the [live verification checklist](../apps-script/README.md#live-verification-checklist) in a real Google account. Until then, Apps Script compatibility and output formatting are unconfirmed.
 
 ## Phase 4: Production summary and learning lab (planned)
 

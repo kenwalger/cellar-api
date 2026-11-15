@@ -1,0 +1,15 @@
+{
+  "name": "digital-cellar-apps-script",
+  "version": "0.1.0",
+  "description": "Google Apps Script adapter that generates production documents from the master script. Node is used only for tests.",
+  "private": true,
+  "license": "MIT",
+  "author": "Ken W. Alger",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

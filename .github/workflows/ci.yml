@@ -33,9 +33,6 @@ jobs:
 
   parser:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: parser
     steps:
       - uses: actions/checkout@v4
 
@@ -45,3 +42,11 @@ jobs:
 
       - name: Run parser tests
         run: npm test
+        working-directory: parser
+
+      - name: Run Apps Script adapter tests
+        run: npm test
+        working-directory: apps-script
+
+      - name: Check Apps Script copies match their sources
+        run: node scripts/sync-apps-script.mjs --check

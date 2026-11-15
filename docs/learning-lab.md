@@ -1,6 +1,6 @@
 # Learning Lab (outline)
 
-> **Status: planned.** This is an outline for a future hands-on tutorial. Only the exercises marked *available now* can be done today. The master script for Exercise 3 exists, but its guided exercise is not written yet. The parser for Exercise 4 also exists, and its walkthrough is also unwritten. The other exercises depend on work in Phases 3B and 4.
+> **Status: planned.** This is an outline for a future hands-on tutorial. Only the exercises marked *available now* can be done today. The master script for Exercise 3 exists, but its guided exercise is not written yet. The parser for Exercise 4 and the Google Docs tooling for Exercise 5 also exist, and their walkthroughs are also unwritten. Exercises 6 and 7 depend on Phase 4.
 
 ## Learning objectives
 
@@ -33,10 +33,9 @@ By the end of the lab, a learner should be able to:
 | 2 | Read the tests and add one for a new edge case | Available now |
 | 3 | Explore the structured master script (see below) | Planned. The script exists; the guided exercise isn't written yet. |
 | 4 | Parse the master script locally and break it on purpose (see below) | Planned. The parser exists; the guided exercise isn't written yet. |
-| 4b | Install the Apps Script adapter and run it against the master Google Doc | Planned (Phase 3B) |
-| 5 | Break the Google Doc's structure on purpose and read the validation findings | Planned (Phase 3B) |
+| 5 | Generate production documents from a Google Doc (see below) | Planned. The tooling exists; the guided exercise isn't written yet, and the tooling hasn't been checked in a live account. |
 | 6 | Generate the Production Summary and adjust the long-video threshold | Planned (Phase 4) |
-| 7 | Inspect the generation manifest | Planned (Phase 4) |
+| 7 | Compare the Production Summary with the generation manifest | Planned (Phase 4) |
 
 ### Exercise 3: Explore the structured master script (planned)
 
@@ -63,6 +62,56 @@ This works today with Node.js 22 or newer. The written walkthrough is still plan
 
 Generating Google Docs isn't possible yet. This exercise stops at the IR and diagnostics.
 
+### Exercise 5: Generate production documents from a Google Doc (planned)
+
+This needs a Google account. Setup is described step by step in [`apps-script/README.md`](../apps-script/README.md). Until the live checklist there has been completed, treat this exercise as a trial run.
+
+1. **Create the master Google Doc.** Paste `course/master-script.md` into a new Google Doc as plain text.
+   *Screenshot:* the top of the document, and one MOTION section showing its tags and annotations.
+2. **Set up the Apps Script project.** Add the script files and set `MASTER_DOCUMENT_ID` in Script Properties.
+   *Screenshot:* the editor's file list and the Script properties panel. Hide the ID if you'll share the screenshot.
+3. **Validate.** Run `validateMasterDocument`.
+   *Expected:* `Stages: 2, videos: 6, sections: 13`, a matching structure, and `READY`.
+   *Screenshot:* the execution log.
+4. **Break it.** Change one `[/MOTION]` to `[/MOTON]` and run `generateProductionDocuments`.
+   *Expected:* an `ERROR` line with the line and paragraph numbers, the message *"Generation blocked ... No files were created"*, and no new folder in Drive.
+   *Screenshot:* the error in the log. Then undo the change.
+5. **Generate.** Run `generateProductionDocuments`.
+   *Expected:* a `COMPLETE` log entry and a new run folder containing three documents and `manifest.json`.
+   *Screenshot:* the folder in Drive.
+6. **Inspect the outputs.** Open each document and confirm it contains only its own role's sections. Stage 2, Video 2 should show `Part 1 of 2` and `Part 2 of 2` in the ONSET document. Instructions should look different from spoken narration.
+   *Screenshot:* one page of each document.
+7. **Trace the provenance.** Open `manifest.json` and match its `source.documentId`, `output.documents` URLs, and counts to what you see.
+   *Screenshot:* the manifest.
+8. **Regenerate.** Edit one sentence in the master and generate again.
+   *Expected:* a second folder appears, the first run's documents still have the old sentence, and the two manifests have different `extractedTextSha256` values.
+   *Screenshot:* both folders side by side.
+
+### Exercise 5: Generate production documents from a Google Doc (planned)
+
+This needs a Google account. Setup is described step by step in [`apps-script/README.md`](../apps-script/README.md). Until the live checklist there has been completed, treat this exercise as a trial run.
+
+1. **Create the master Google Doc.** Paste `course/master-script.md` into a new Google Doc as plain text.
+   *Screenshot:* the top of the document, and one MOTION section showing its tags and annotations.
+2. **Set up the Apps Script project.** Add the script files and set `MASTER_DOCUMENT_ID` in Script Properties.
+   *Screenshot:* the editor's file list and the Script properties panel. Hide the ID if you'll share the screenshot.
+3. **Validate.** Run `validateMasterDocument`.
+   *Expected:* `Stages: 2, videos: 6, sections: 13`, a matching structure, and `READY`.
+   *Screenshot:* the execution log.
+4. **Break it.** Change one `[/MOTION]` to `[/MOTON]` and run `generateProductionDocuments`.
+   *Expected:* an `ERROR` line with the line and paragraph numbers, the message *"Generation blocked ... No files were created"*, and no new folder in Drive.
+   *Screenshot:* the error in the log. Then undo the change.
+5. **Generate.** Run `generateProductionDocuments`.
+   *Expected:* a `COMPLETE` log entry and a new run folder containing three documents and `manifest.json`.
+   *Screenshot:* the folder in Drive.
+6. **Inspect the outputs.** Open each document and confirm it contains only its own role's sections. Stage 2, Video 2 should show `Part 1 of 2` and `Part 2 of 2` in the ONSET document. Instructions should look different from spoken narration.
+   *Screenshot:* one page of each document.
+7. **Trace the provenance.** Open `manifest.json` and match its `source.documentId`, `output.documents` URLs, and counts to what you see.
+   *Screenshot:* the manifest.
+8. **Regenerate.** Edit one sentence in the master and generate again.
+   *Expected:* a second folder appears, the first run's documents still have the old sentence, and the two manifests have different `extractedTextSha256` values.
+   *Screenshot:* both folders side by side.
+
 ## Evidence and screenshot checklist
 
 Capture these as the lab is built, and store them in `docs/screenshots/`:
@@ -78,7 +127,10 @@ Capture these as the lab is built, and store them in `docs/screenshots/`:
 - [ ] Passing `npm test` output for the parser (Phase 3A)
 - [ ] `print-ir` output for one video, showing sections, blocks, and line numbers (Phase 3A)
 - [ ] A diagnostic produced by a deliberately broken copy of the script (Phase 3A)
-- [ ] Apps Script project and its run log (Phase 3B)
+- [ ] Apps Script project and its validation log (Phase 3B)
+- [ ] A blocked generation run with its error line, and no new folder (Phase 3B)
+- [ ] A run folder with three documents and `manifest.json` (Phase 3B)
+- [ ] Two run folders after regeneration, with the first unchanged (Phase 3B)
 - [ ] Each of the four generated documents (Phases 3 and 4)
 - [ ] A Production Summary with a long-video warning (Phase 4)
 - [ ] Validation findings for a deliberately malformed script (Phase 3)

@@ -126,13 +126,13 @@ The screencasts use Swagger UI at `http://127.0.0.1:8000/docs`. The 422 demonstr
 - **Expected structure.** [`fixtures/expected-structure.json`](fixtures/expected-structure.json) lists each stage and video by number and title, plus the exact sequence of production sections in each video. It was written from the course outline *before* the script was finished, not generated from the script. That keeps it an independent acceptance target for the parser.
 - **Malformed scripts.** [`fixtures/malformed-script.md`](fixtures/malformed-script.md) contains four isolated cases. See [`fixtures/README.md`](fixtures/README.md).
 
-## Planned production artifacts (not implemented)
+## Production artifacts
 
-The parser in [`parser/`](../parser) (Phase 3A) already reads and validates the script as plain text in Node.js. In Phases 3B and 4, Google Apps Script tooling will read the master script from a Google Doc and generate:
+The parser in [`parser/`](../parser) (Phase 3A) reads and validates the script. The Apps Script tooling in [`apps-script/`](../apps-script) (Phase 3B) reads the script from a Google Doc and generates the first three documents below. The Production Summary is planned for Phase 4.
 
 - **ONSET**: presenter narration for the teleprompter.
 - **MOTION**: visual instructions and voiceover for the motion designer.
 - **SCREENCAST**: actions and voiceover for the screen recording.
-- **Production Summary**: estimated duration per video, content statistics, a configurable long-video warning (default three minutes), and validation findings.
+- **Production Summary** *(planned, Phase 4)*: estimated duration per video, content statistics, a configurable long-video warning (default three minutes), and validation findings.
 
-None of these documents exists yet. See [`docs/roadmap.md`](../docs/roadmap.md).
+The ONSET, MOTION, and SCREENCAST generators are implemented and tested offline. Running them against a real Google account is a manual checkpoint (see [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist)). See [`docs/roadmap.md`](../docs/roadmap.md).
