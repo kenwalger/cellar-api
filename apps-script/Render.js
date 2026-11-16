@@ -6,9 +6,11 @@
  *
  * Paragraph model: { style, kind, text }
  * - style: TITLE | SUBTITLE | HEADING1 | HEADING2 | HEADING3 | NORMAL
- * - kind: heading | provenance | note | label | narration | instruction | cue | blank
+ * - kind: heading | provenance | note | label | narration | instruction | example | cue | blank
  *   narration = spoken (ONSET text, VOICEOVER); instruction = not spoken
- *   (ACTION, VISUAL, HIGHLIGHT); label = the annotation name before a block.
+ *   (ACTION, VISUAL, HIGHLIGHT); example = a technical example in a SCREENCAST
+ *   ACTION or HIGHLIGHT block (see renderEntries); label = the annotation name
+ *   before a block.
  */
 var Render = (function () {
   "use strict";
@@ -95,28 +97,77 @@ var Render = (function () {
   }
 
   function renderSection(section, add) {
-    section.content.forEach(function (item) {
-      if (item.kind === "block") {
-        add("NORMAL", "label", item.type);
-        const textKind = item.type === "VOICEOVER" ? "narration" : "instruction";
-        item.content.forEach(function (entry) {
-          renderEntry(entry, textKind, add);
-        });
+    if (section.type === "ONSET") {
+      // ONSET content: narration text and cues.
+      renderEntries(withoutBlanksAroundCues(section.content), "narration", false, add);
+      return;
+    }
+    section.content.forEach(function (block) {
+      add("NORMAL", "label", block.type);
+      const textKind = block.type === "VOICEOVER" ? "narration" : "instruction";
+      const examples = section.type === "SCREENCAST" && EXAMPLE_BLOCKS.indexOf(block.type) !== -1;
+      renderEntries(withoutBlanksAroundCues(block.content), textKind, examples, add);
+    });
+  }
+
+  // Blocks whose directions can introduce a technical example (see below).
+  const EXAMPLE_BLOCKS = ["ACTION", "HIGHLIGHT"];
+
+  /**
+   * Renders text and cues. When `examples` is true, the renderer convention for
+   * technical examples applies: a line ending with a colon (a lead-in such as
+   * "Run:" or "The response body:") makes the next run of non-blank lines,
+   * after any blank lines, an "example" paragraph. The run ends at a blank
+   * line or a cue. Only the layout decides this; the text is never inspected
+   * for braces, URLs, or commands, and it's never changed.
+   */
+  function renderEntries(entries, textKind, examples, add) {
+    let afterLeadIn = false;
+    let inExample = false;
+    entries.forEach(function (entry) {
+      if (entry.kind === "cue") {
+        afterLeadIn = false;
+        inExample = false;
+        add("NORMAL", "cue", `[${entry.type}]`);
+      } else if (entry.text.trim() === "") {
+        inExample = false;
+        add("NORMAL", "blank", entry.text);
+      } else if (examples && (afterLeadIn || inExample)) {
+        afterLeadIn = false;
+        inExample = true;
+        add("NORMAL", "example", entry.text);
       } else {
-        // ONSET content: narration text and cues.
-        renderEntry(item, "narration", add);
+        afterLeadIn = examples && /:\s*$/.test(entry.text);
+        add("NORMAL", textKind, entry.text);
       }
     });
   }
 
-  function renderEntry(entry, textKind, add) {
-    if (entry.kind === "cue") {
-      add("NORMAL", "cue", `[${entry.type}]`);
-    } else if (entry.text.trim() === "") {
-      add("NORMAL", "blank", entry.text);
-    } else {
-      add("NORMAL", textKind, entry.text);
+  /**
+   * The grammar puts each tag on its own line, separated by blank lines. Next
+   * to a cue those blank lines only separate the tag, so they're left out of
+   * the rendered document, where the cue paragraph has its own spacing. The IR
+   * is not changed, and blank lines between paragraphs are kept.
+   */
+  function withoutBlanksAroundCues(entries) {
+    return entries.filter(function (entry, index) {
+      if (entry.kind !== "text" || entry.text.trim() !== "") {
+        return true;
+      }
+      return !(nearestNonBlank(entries, index, -1) === "cue" || nearestNonBlank(entries, index, 1) === "cue");
+    });
+  }
+
+  function nearestNonBlank(entries, index, step) {
+    for (let i = index + step; i >= 0 && i < entries.length; i += step) {
+      if (entries[i].kind === "cue") {
+        return "cue";
+      }
+      if (entries[i].text.trim() !== "") {
+        return "text";
+      }
     }
+    return null;
   }
 
   return {

@@ -101,7 +101,7 @@ describe("successful generation", () => {
     const summaryDoc = Object.values(services.store.documents)[3];
     assert.equal(summaryDoc.title, expectedModel.title);
     assert.deepEqual(plain(summaryDoc.paragraphs), expectedModel.paragraphs);
-    assert.ok(summaryDoc.paragraphs.some((p) => p.text === "Spoken words: 1980"));
+    assert.ok(summaryDoc.paragraphs.some((p) => p.text === "Spoken words: 1978"));
   });
 
   test("the manifest links the source to every output", () => {
@@ -131,7 +131,7 @@ describe("successful generation", () => {
       coreSha256: "ef".repeat(32),
       config: { wordsPerMinute: 140, longVideoThresholdMinutes: 3, screencastAllowanceSecondsPerSection: 0 },
     });
-    assert.equal(manifest.estimate.totals.spokenWordCount, 1980);
+    assert.equal(manifest.estimate.totals.spokenWordCount, 1978);
     assert.equal(manifest.estimate.totals.videosOverThreshold, 1);
     assert.equal(manifest.estimate.videos.length, 6);
     assert.deepEqual(
@@ -246,7 +246,7 @@ describe("partial failure", () => {
       ],
     );
     // The estimate was made before the run started, so it's in the failure manifest.
-    assert.equal(partial.manifest.estimate.totals.spokenWordCount, 1980);
+    assert.equal(partial.manifest.estimate.totals.spokenWordCount, 1978);
 
     // The failure manifest is written into the run folder and the folder is marked.
     const files = Object.values(services.store.files);

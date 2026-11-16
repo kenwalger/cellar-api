@@ -80,7 +80,7 @@ This needs a Google account. Setup is described step by step in [`apps-script/RE
 5. **Generate.** Run `generateProductionDocuments`.
    *Expected:* a `COMPLETE` log entry and a new run folder containing four documents (ONSET, MOTION, SCREENCAST, and Production Summary) and `manifest.json`.
    *Screenshot:* the folder in Drive.
-6. **Inspect the outputs.** Open each document and confirm it contains only its own role's sections. Stage 2, Video 2 should show `Part 1 of 2` and `Part 2 of 2` in the ONSET document. Instructions should look different from spoken narration.
+6. **Inspect the outputs.** Open each document and confirm it contains only its own role's sections. Stage 2, Video 2 should show `Part 1 of 2` and `Part 2 of 2` in the ONSET document. Instructions should look different from spoken narration. In SCREENCAST, the JSON bodies and `curl` commands after a colon lead-in should be monospaced, and each `[PAUSE]` should sit between its neighboring paragraphs without empty lines around it. The Production Summary should open with a video overview table.
    *Screenshot:* one page of each document.
 7. **Trace the provenance.** Open `manifest.json` and match its `source.documentId`, `output.documents` URLs, and counts to what you see.
    *Screenshot:* the manifest.
@@ -94,9 +94,9 @@ The Production Summary is a calculation from the master script plus a few stated
 
 **Offline (Node.js 22 or newer):**
 
-1. Run `cd production`, then `npm run print-estimate -- ../course/master-script.md`. Find Stage 2, Video 2. *Expected:* `spokenWordCount` 666, `estimatedDurationSeconds` about 285.43, and one `LONG_VIDEO_ESTIMATE` warning, because 285.43 s is over 180 s.
-2. Run it again with a faster rate: `npm run print-estimate -- ../course/master-script.md '{"wordsPerMinute": 160}'`. *Expected:* every `spokenWordCount` is the same, but every duration is shorter. Stage 2, Video 2 is now about 249.75 s and still flagged.
-3. Try `'{"wordsPerMinute": 230}'`. *Expected:* Stage 2, Video 2 drops to about 173.74 s, and `warnings` is empty.
+1. Run `cd production`, then `npm run print-estimate -- ../course/master-script.md`. Find Stage 2, Video 2. *Expected:* `spokenWordCount` 664, `estimatedDurationSeconds` about 284.57, and one `LONG_VIDEO_ESTIMATE` warning, because 284.57 s is over 180 s.
+2. Run it again with a faster rate: `npm run print-estimate -- ../course/master-script.md '{"wordsPerMinute": 160}'`. *Expected:* every `spokenWordCount` is the same, but every duration is shorter. Stage 2, Video 2 is now exactly 249 s and still flagged.
+3. Try `'{"wordsPerMinute": 230}'`. *Expected:* Stage 2, Video 2 drops to about 173.22 s, and `warnings` is empty.
 4. Try `'{"wordsPerMinute": 0}'` and `'{"wordsPerMinuet": 160}'`. *Expected:* both are rejected with an `Invalid estimator configuration` error. The estimator never falls back to a default.
 5. Confirm with `git status` that `course/master-script.md` is unchanged.
 
@@ -140,6 +140,8 @@ Capture these as the lab is built, and store them in `docs/screenshots/`:
 - [ ] Two run folders after regeneration, with the first unchanged (Phase 3B)
 - [ ] Each of the four generated documents (Phases 3 and 4)
 - [ ] A Production Summary with a long-video warning (Phase 4)
+- [ ] A SCREENCAST page with a monospaced JSON example and a compact `[PAUSE]` cue (Phase 4b)
+- [ ] The Production Summary's video overview table (Phase 4b)
 - [ ] Two Production Summaries at different speaking rates, side by side (Phase 4, Exercise 6)
 - [ ] A Production Summary's Warnings section with a 60-second screencast allowance (Phase 4, Exercise 7)
 - [ ] Validation findings for a deliberately malformed script (Phase 3)

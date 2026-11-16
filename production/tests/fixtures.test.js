@@ -25,6 +25,12 @@ const PHASE_2_REFERENCE_COUNTS = {
   "2.3": 228,
 };
 
+// Phase 4b revised the status-code passage in Stage 2, Video 2. Counted by
+// hand under the documented policy, the 400s sentence stays at 15 words and
+// the 500s sentence goes from 18 words to 16, so that video loses 2 words.
+// Only that entry changes; the others still use the Phase 2 counts.
+const REFERENCE_COUNTS = { ...PHASE_2_REFERENCE_COUNTS, "2.2": PHASE_2_REFERENCE_COUNTS["2.2"] - 2 };
+
 test("the master script parses without errors", () => {
   assert.deepEqual(
     parsed.diagnostics.filter((d) => d.severity === "error"),
@@ -66,10 +72,10 @@ function expectedVideosFlat() {
   return expected.stages.flatMap((s) => s.videos);
 }
 
-test("spoken word counts match the Phase 2 reference counts", () => {
+test("spoken word counts match the reference counts (Phase 2, adjusted for the Phase 4b edit)", () => {
   const actual = Object.fromEntries(estimate.videos.map((v) => [`${v.stageNumber}.${v.videoNumber}`, v.spokenWordCount]));
-  assert.deepEqual(actual, PHASE_2_REFERENCE_COUNTS);
-  assert.equal(estimate.totals.spokenWordCount, 1980);
+  assert.deepEqual(actual, REFERENCE_COUNTS);
+  assert.equal(estimate.totals.spokenWordCount, 1978);
 });
 
 test("stage and course totals reconcile with the video values", () => {
@@ -101,7 +107,7 @@ test("at the defaults, only Stage 2, Video 2 exceeds three minutes (Phase 2 expe
     [[2, 2, "Handling Errors"]],
   );
   assert.equal(estimate.warnings[0].includesScreencastAllowance, false);
-  assert.ok(Math.abs(estimate.warnings[0].estimatedDurationSeconds - 285.43) < 0.01);
+  assert.ok(Math.abs(estimate.warnings[0].estimatedDurationSeconds - 284.57) < 0.01);
 });
 
 test("a nonzero screencast allowance can flag more videos", () => {

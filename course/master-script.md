@@ -254,7 +254,7 @@ Video 2: Handling Errors
 
 Every request we've sent so far has worked. In practice, requests fail all the time, and a good API tells the client clearly what went wrong.
 
-It does that with the status code. Every HTTP response carries a three-digit status code, and the first digit tells you the general category. Codes in the 200s mean the request succeeded. Codes in the 400s mean there was a problem with the request the client sent. Codes in the 500s mean something went wrong on the server, even though the request itself was fine.
+It does that with the status code. Every HTTP response carries a three-digit status code, and the first digit tells you the general category. Codes in the 200s mean the request succeeded. Codes in the 400s generally mean the server can't or won't fulfill the client's request. Codes in the 500s mean the server encountered an error while trying to handle the request.
 
 [PAUSE]
 

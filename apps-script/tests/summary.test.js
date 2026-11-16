@@ -54,7 +54,15 @@ describe("Production Summary at the default configuration", () => {
   test("has the expected sections in order", () => {
     assert.deepEqual(
       model.paragraphs.filter((p) => p.style === "HEADING1").map((p) => p.text),
-      ["Estimator configuration", "Course overview", "Video breakdown", "Warnings", "Estimation methodology", "Provenance"],
+      [
+        "Estimator configuration",
+        "Course overview",
+        "Video overview",
+        "Video breakdown",
+        "Warnings",
+        "Estimation methodology",
+        "Provenance",
+      ],
     );
   });
 
@@ -88,8 +96,8 @@ describe("Production Summary at the default configuration", () => {
       `Estimated total: ${ProductionEstimator.formatDuration(t.estimatedDurationSeconds)}`,
       "Videos over the threshold: 1",
     ]);
-    assert.equal(text[3], "Spoken words: 1980");
-    assert.equal(text[6], "Estimated total: 14 min 9 s");
+    assert.equal(text[3], "Spoken words: 1978");
+    assert.equal(text[6], "Estimated total: 14 min 8 s");
   });
 
   test("the video breakdown lists every stage and video in order", () => {
@@ -118,7 +126,7 @@ describe("Production Summary at the default configuration", () => {
     assert.deepEqual(lines, [
       "Sections: ONSET → MOTION → SCREENCAST → ONSET",
       "Section counts: ONSET 2, MOTION 1, SCREENCAST 1",
-      "Spoken words: 666",
+      "Spoken words: 664",
       "Narration: 4 min 45 s",
       "Screencast allowance: 0 min 0 s",
       "Estimated total: 4 min 45 s",
@@ -130,10 +138,56 @@ describe("Production Summary at the default configuration", () => {
     assert.equal(breakdown[first + 7].text, "Status: within the 3 min 0 s threshold");
   });
 
-  test("notes technical tokens that may take longer to read aloud", () => {
+  test("notes technical tokens with correct singular and plural wording", () => {
     const breakdown = section(model, "Video breakdown").map((p) => p.text);
-    assert.ok(breakdown.includes("Spoken words: 246 (2 are URLs, paths, or code, which may take longer to say)"));
+    // Zero, one, and two technical tokens, from the estimator's counts.
+    assert.deepEqual(
+      estimate.videos.slice(0, 3).map((v) => v.technicalTokenCount),
+      [0, 1, 2],
+    );
     assert.ok(breakdown.includes("Spoken words: 273"));
+    assert.ok(breakdown.includes("Spoken words: 287 (includes 1 URL, path, or code token that may take longer to narrate)"));
+    assert.ok(breakdown.includes("Spoken words: 246 (includes 2 URL, path, or code tokens that may take longer to narrate)"));
+    assert.ok(!breakdown.some((t) => /\b1 are\b/.test(t)));
+  });
+
+  test("the video overview table lists every video once, in order, from the estimate", () => {
+    const overview = section(model, "Video overview");
+    const tables = overview.filter((p) => p.kind === "table");
+    assert.equal(tables.length, 1);
+    const table = tables[0].table;
+    assert.deepEqual(table.header, ["Video", "Spoken words", "Estimated duration", "Status"]);
+    assert.deepEqual(table.numericColumns, [1, 2]);
+    assert.deepEqual(
+      table.rows,
+      estimate.videos.map((v) => [
+        `S${v.stageNumber} V${v.videoNumber} — ${v.title}`,
+        String(v.spokenWordCount),
+        ProductionEstimator.formatDuration(v.estimatedDurationSeconds),
+        v.warnings.length > 0 ? "Over" : "Within",
+      ]),
+    );
+    assert.deepEqual(
+      table.rows.map((r) => r[0]),
+      [
+        "S1 V1 — What Is an API?",
+        "S1 V2 — Requests and Responses",
+        "S1 V3 — Understanding JSON",
+        "S2 V1 — Making API Requests",
+        "S2 V2 — Handling Errors",
+        "S2 V3 — Wrapping Up",
+      ],
+    );
+    assert.deepEqual(
+      table.rows.map((r) => r[3]),
+      ["Within", "Within", "Within", "Within", "Over", "Within"],
+    );
+  });
+
+  test("the detailed breakdown still follows the overview, unchanged in shape", () => {
+    const breakdown = section(model, "Video breakdown");
+    assert.equal(breakdown.filter((p) => p.style === "HEADING3").length, 6);
+    assert.ok(!breakdown.some((p) => p.kind === "table"));
   });
 
   test("the warnings section lists each flagged video", () => {
@@ -170,8 +224,12 @@ describe("Production Summary at the default configuration", () => {
   test("every paragraph uses a known style and kind", () => {
     for (const p of model.paragraphs) {
       assert.ok(["TITLE", "SUBTITLE", "HEADING1", "HEADING2", "HEADING3", "NORMAL"].includes(p.style), p.style);
-      assert.ok(["heading", "provenance", "note", "fact", "warning"].includes(p.kind), p.kind);
+      assert.ok(["heading", "provenance", "note", "fact", "warning", "table"].includes(p.kind), p.kind);
       assert.equal(typeof p.text, "string");
+      if (p.kind === "table") {
+        assert.ok(p.table.rows.every((row) => row.length === p.table.header.length));
+        assert.ok(p.table.rows.flat().every((cell) => typeof cell === "string"));
+      }
     }
   });
 });
@@ -199,7 +257,7 @@ describe("Production Summary with other configurations", () => {
 
   test("a faster speaking rate shortens every duration without changing word counts", () => {
     const slow = build();
-    // 666 words at 230 WPM is about 174 s, under the 180 s threshold.
+    // 664 words at 230 WPM is about 173 s, under the 180 s threshold.
     const fast = build({ wordsPerMinute: 230 });
     assert.deepEqual(
       fast.estimate.videos.map((v) => v.spokenWordCount),
@@ -213,6 +271,20 @@ describe("Production Summary with other configurations", () => {
   });
 });
 
+describe("Production Summary with long titles", () => {
+  test("a long video title appears in full in the overview and breakdown", () => {
+    const longTitle = `Handling Errors, Retries, Timeouts, and Every Other Way a Request Can Go Wrong ${"x".repeat(120)}`;
+    const longDocument = ProductionScript.parseProductionScript(
+      ["Stage 1: S", `Video 1: ${longTitle}`, "[ONSET]", "Hello there.", "[/ONSET]"].join("\n"),
+    ).document;
+    const estimate = ProductionEstimator.estimateProduction(longDocument);
+    const model = plain(Summary.buildSummaryDocument(estimate, meta));
+    const table = section(model, "Video overview").find((p) => p.kind === "table").table;
+    assert.deepEqual(table.rows, [[`S1 V1 — ${longTitle}`, "2", "0 min 1 s", "Within"]]);
+    assert.ok(texts(model).includes(`Video 1: ${longTitle}`));
+  });
+});
+
 describe("formatLogLines", () => {
   test("logs the active configuration, each video, the total, and warnings", () => {
     const estimate = ProductionEstimator.estimateProduction(document);
@@ -221,8 +293,8 @@ describe("formatLogLines", () => {
       log[0],
       "Estimator configuration: 140 words per minute, long-video threshold 3 minutes, screencast allowance 0 seconds per SCREENCAST section.",
     );
-    assert.ok(log.includes("Stage 2, Video 2 \"Handling Errors\": 666 spoken words, estimated 4 min 45 s"));
-    assert.ok(log.includes("Course estimate: 1980 spoken words, 14 min 9 s across 6 videos."));
+    assert.ok(log.includes("Stage 2, Video 2 \"Handling Errors\": 664 spoken words, estimated 4 min 45 s"));
+    assert.ok(log.includes("Course estimate: 1978 spoken words, 14 min 8 s across 6 videos."));
     assert.ok(log.includes(`WARNING LONG_VIDEO_ESTIMATE: ${estimate.warnings[0].message}`));
   });
 });

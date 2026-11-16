@@ -8,7 +8,9 @@
  *
  * Paragraph model: { style, kind, text }
  * - style: TITLE | SUBTITLE | HEADING1 | HEADING2 | HEADING3 | NORMAL
- * - kind: heading | provenance | note | fact | warning
+ * - kind: heading | provenance | note | fact | warning | table
+ *   A "table" entry has text "" and a `table` of {header, rows, numericColumns},
+ *   all strings, which GoogleServices writes as a native Docs table.
  */
 var Summary = (function () {
   "use strict";
@@ -69,6 +71,9 @@ var Summary = (function () {
     fact(`Estimated total: ${duration(totals.estimatedDurationSeconds)}`);
     fact(`Videos over the threshold: ${totals.videosOverThreshold}`);
 
+    add("HEADING1", "heading", "Video overview");
+    paragraphs.push({ style: "NORMAL", kind: "table", text: "", table: overviewTable(estimate, duration) });
+
     add("HEADING1", "heading", "Video breakdown");
     estimate.stages.forEach(function (stage) {
       add("HEADING2", "heading", `Stage ${stage.stageNumber}: ${stage.title}`);
@@ -122,11 +127,7 @@ var Summary = (function () {
     add("HEADING3", "heading", `Video ${video.videoNumber}: ${video.title}`);
     fact(`Sections: ${video.sectionSequence.length > 0 ? video.sectionSequence.join(" → ") : "none"}`);
     fact(`Section counts: ${formatSectionCounts(video.sectionCounts)}`);
-    fact(
-      video.technicalTokenCount > 0
-        ? `Spoken words: ${video.spokenWordCount} (${video.technicalTokenCount} are URLs, paths, or code, which may take longer to say)`
-        : `Spoken words: ${video.spokenWordCount}`,
-    );
+    fact(`Spoken words: ${video.spokenWordCount}${technicalNote(video.technicalTokenCount)}`);
     fact(`Narration: ${duration(video.narrationDurationSeconds)}`);
     fact(`Screencast allowance: ${duration(video.screencastAllowanceSeconds)}`);
     fact(`Estimated total: ${duration(video.estimatedDurationSeconds)}`);
@@ -135,6 +136,31 @@ var Summary = (function () {
     } else {
       fact(`Status: within the ${threshold} threshold`);
     }
+  }
+
+  function technicalNote(count) {
+    if (count === 0) {
+      return "";
+    }
+    const noun = count === 1 ? "token" : "tokens";
+    return ` (includes ${count} URL, path, or code ${noun} that may take longer to narrate)`;
+  }
+
+  // One row per video, in document order. GoogleServices writes it as a native
+  // Docs table, whose cells wrap, so long titles are never cut off.
+  function overviewTable(estimate, duration) {
+    return {
+      header: ["Video", "Spoken words", "Estimated duration", "Status"],
+      numericColumns: [1, 2],
+      rows: estimate.videos.map(function (video) {
+        return [
+          `S${video.stageNumber} V${video.videoNumber} — ${video.title}`,
+          String(video.spokenWordCount),
+          duration(video.estimatedDurationSeconds),
+          video.warnings.length > 0 ? "Over" : "Within",
+        ];
+      }),
+    };
   }
 
   function sectionTotal(counts) {

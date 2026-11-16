@@ -1,6 +1,6 @@
 # Roadmap
 
-Four milestones. Each phase builds on the previous one. Phases 1, 2, 3A, 3B, and 4 are implemented in the repository. The project owner reported a successful live Google Docs run of Phase 3B. Phase 4 still needs a person to run it against a live Google account. The learning-lab walkthrough and screenshots are still to come.
+Four milestones. Each phase builds on the previous one. Phases 1, 2, 3A, 3B, and 4 are implemented in the repository. The project owner reported successful live Google Docs runs of Phases 3B and 4. The Phase 4b cleanup still needs a person to run it against a live Google account. The learning-lab walkthrough and screenshots are still to come.
 
 ## Phase 1: Repository and API ✅
 
@@ -46,14 +46,14 @@ Google Apps Script tooling in [`apps-script/`](../apps-script):
 - **Automated, offline (done):** 67 Node tests for extraction, validation, rendering, the manifest, generation (with fake Drive and Docs services), configuration, portability, and the drift check. These are in addition to the 50 parser tests.
 - **Live Google Apps Script (reported):** the project owner reported a successful live Google Docs run. The item-by-item [checklist](../apps-script/README.md#phase-3b-three-role-documents-and-the-manifest) results and screenshots haven't been recorded in the repository yet.
 
-## Phase 4: Production summary ✅ (implementation; live check pending)
+## Phase 4: Production summary ✅
 
 A portable estimator in [`production/`](../production) and a fourth generated document:
 
 - `estimateProduction(document, options)` reads the parser's IR (it never reparses) and counts spoken words: ONSET text and `VOICEOVER` blocks only, as the grammar defines them. It follows a documented word-count policy.
 - Narration seconds = words / words per minute × 60, plus an optional fixed allowance per SCREENCAST section. Values are kept at full precision, and stage and course totals add up exactly.
 - Configurable assumptions: 140 words per minute, a three-minute threshold, and a 0-second screencast allowance (a narration-only baseline) by default. Invalid settings are rejected, never defaulted.
-- `LONG_VIDEO_ESTIMATE` warnings for videos strictly over the threshold. At the defaults, only Stage 2, Video 2 (666 words, about 4 min 45 s) is flagged. Warnings never block generation.
+- `LONG_VIDEO_ESTIMATE` warnings for videos strictly over the threshold. At the defaults, only Stage 2, Video 2 (664 words, about 4 min 45 s) is flagged. Warnings never block generation.
 - The Apps Script generator estimates before the first write and creates a **Production Summary** Google Doc with the configuration, a course overview, a per-video breakdown, warnings, the methodology and its exclusions, and provenance.
 - The manifest moves to schema version 2. It adds the estimator version, core hash, configuration, totals, per-video figures, and warnings, plus the fourth output document.
 - `apps-script/ProductionEstimator.js` is a byte-for-byte copy of the estimator core, checked by the sync script in CI.
@@ -61,7 +61,17 @@ A portable estimator in [`production/`](../production) and a fourth generated do
 **Verification status:**
 
 - **Automated, offline (done):** 75 estimator tests, 107 Apps Script adapter tests (up from 67), and the 50 unchanged parser tests, plus the parser and estimator drift check.
-- **Live Google Apps Script (not done yet):** the [Phase 4 checklist](../apps-script/README.md#phase-4-production-summary).
+- **Live Google Apps Script (reported):** the project owner reported a successful run on November 16, 2026 (run `6146a211`): four documents, 1,980 spoken words, 14 min 9 s, and one warning. Item-by-item [checklist](../apps-script/README.md#phase-4-production-summary) results haven't been recorded.
+
+### Phase 4b: Cleanup and final acceptance ✅ (implementation; live check pending)
+
+A narrowly scoped cleanup based on the live run's documents. There's no new phase of functionality, the parser grammar and estimator are unchanged, and the manifest stays at schema version 2.
+
+- **SCREENCAST technical examples:** the JSON bodies and `curl` commands that follow a colon lead-in (`Run:`, `The response body:`) in an `ACTION` or `HIGHLIGHT` block are shown in Courier New, upright and indented, with their text unchanged. This is a layout convention documented in [`course/README.md`](../course/README.md#technical-examples-in-screencast-sections). The text is never inspected for code-like content.
+- **PAUSE cues:** the blank separator lines next to a cue are no longer written. Each cue gets the same small space before and after.
+- **Production Summary:** a native video overview table (video, spoken words, estimated duration, status), and singular and plural technical-token wording.
+- **Master script:** the 400s and 500s sentences in Stage 2, Video 2 are more precise. That video goes from 666 to 664 spoken words, and the course from 1,980 to 1,978 (14 min 9 s to 14 min 8 s). Structure is unchanged (2 stages, 6 videos, 13 sections), and Stage 2, Video 2 is still the only long video.
+- **Live (not done yet):** rename the master Google Doc (its title has a typo), apply the narration edit there, and run the [Phase 4b checklist](../apps-script/README.md#phase-4b-cleanup-and-final-acceptance).
 
 ## Still to come: learning lab
 

@@ -14,7 +14,10 @@ var GoogleServices = (function () {
     narration: { bold: false, italic: false, color: "#000000" },
     instruction: { bold: false, italic: true, color: "#555555" },
     label: { bold: true, italic: false, color: "#1F4E79" },
-    cue: { bold: true, italic: false, color: "#9C2A00" },
+    // Cues get the same small space before and after, instead of blank lines.
+    cue: { bold: true, italic: false, color: "#9C2A00", spaceBefore: 6, spaceAfter: 6 },
+    // SCREENCAST technical examples: monospaced, upright, and indented.
+    example: { bold: false, italic: false, color: "#202124", font: "Courier New", indent: 18 },
     provenance: { bold: false, italic: true, color: "#666666" },
     note: { bold: false, italic: true, color: "#666666" },
     // Production Summary (see Summary.js). "fact" paragraphs use the default style.
@@ -81,7 +84,11 @@ var GoogleServices = (function () {
     const doc = DocumentApp.openById(documentId);
     const body = doc.getBody();
     paragraphs.forEach(function (spec) {
-      applyStyle(body.appendParagraph(spec.text), spec);
+      if (spec.kind === "table") {
+        appendTable(body, spec.table);
+      } else {
+        applyStyle(body.appendParagraph(spec.text), spec);
+      }
     });
     // A new document starts with one empty paragraph. Remove it now that
     // there are others (the last paragraph of a body can't be removed).
@@ -101,8 +108,35 @@ var GoogleServices = (function () {
       return;
     }
     paragraph.editAsText().setBold(look.bold).setItalic(look.italic).setForegroundColor(look.color);
+    if (look.font) {
+      paragraph.editAsText().setFontFamily(look.font);
+    }
+    if (look.indent) {
+      paragraph.setIndentStart(look.indent).setIndentFirstLine(look.indent);
+    }
+    if (look.spaceBefore !== undefined) {
+      paragraph.setSpacingBefore(look.spaceBefore).setSpacingAfter(look.spaceAfter);
+    }
     if (spec.kind === "label") {
       paragraph.setSpacingBefore(12);
+    }
+  }
+
+  // A native table: a bold header row, and right-aligned number columns.
+  // Cells wrap, so long titles are shown in full.
+  function appendTable(body, table) {
+    const element = body.appendTable([table.header].concat(table.rows));
+    for (let r = 0; r < element.getNumRows(); r++) {
+      const row = element.getRow(r);
+      for (let c = 0; c < row.getNumCells(); c++) {
+        const paragraph = row.getCell(c).getChild(0).asParagraph();
+        if (r === 0) {
+          paragraph.editAsText().setBold(true);
+        }
+        if (table.numericColumns.indexOf(c) !== -1) {
+          paragraph.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+        }
+      }
     }
   }
 

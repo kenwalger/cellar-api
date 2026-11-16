@@ -33,7 +33,7 @@ The script also serves a second purpose. It's the primary test document for the 
 | 2 | Handling Errors | ONSET, MOTION, SCREENCAST, ONSET |
 | 3 | Wrapping Up | ONSET |
 
-Stage 2, Video 2 is deliberately the longest video. It covers 200, 404, and 422 responses in depth so that, at the default speaking rate of 140 words per minute, it exceeds the Production Summary's default three-minute long-video threshold (666 spoken words, about 4 min 45 s). The other videos are much shorter. The script doesn't contain any durations. Timing is calculated by the estimator in [`production/`](../production/README.md).
+Stage 2, Video 2 is deliberately the longest video. It covers 200, 404, and 422 responses in depth so that, at the default speaking rate of 140 words per minute, it exceeds the Production Summary's default three-minute long-video threshold (664 spoken words, about 4 min 45 s). The other videos are much shorter. The script doesn't contain any durations. Timing is calculated by the estimator in [`production/`](../production/README.md).
 
 ## Script grammar
 
@@ -88,6 +88,26 @@ The timing estimate ([`production/`](../production/README.md)) counts only spoke
 - **Counted:** prose in ONSET sections and the content of `[VOICEOVER]` blocks.
 - **Not counted:** `[ACTION]`, `[VISUAL]`, and `[HIGHLIGHT]` content, which includes URLs, commands, and JSON examples. Headings, front matter, and the tags themselves are also not counted.
 
+### Technical examples in SCREENCAST sections
+
+This is a **rendering convention, not part of the grammar.** The parser treats these lines as ordinary text, and the estimator doesn't count them (they're not spoken).
+
+In a SCREENCAST `[ACTION]` or `[HIGHLIGHT]` block, write a lead-in line that ends with a colon. Then, after a blank line, put the command or JSON exactly as it should appear:
+
+```text
+[ACTION]
+
+Open a terminal. Run:
+
+curl -i "http://127.0.0.1:8000/api/v1/batches?status=spilled"
+```
+
+The SCREENCAST document shows the run of lines after the lead-in, up to the next blank line, in a monospaced font, upright and indented, and unchanged. Every command and JSON body in the master script follows this pattern.
+
+Code-like text without a lead-in stays an ordinary direction. Examples are `"temperature_c": null` as a highlight on its own, and the inline `The Request URL: http://…`. The renderer never guesses from braces, quotes, or URLs. The convention doesn't apply in VOICEOVER (narration), ONSET, or MOTION.
+
+If examples ever need to be marked without relying on layout, the smallest reliable change would be a grammar extension, such as an `[EXAMPLE]` block annotation for SCREENCAST. That would need a parser and fixture update, and it hasn't been made.
+
 ## Google Docs portability
 
 The script will be copied into Google Docs, so:
@@ -135,4 +155,4 @@ The parser in [`parser/`](../parser) (Phase 3A) reads and validates the script. 
 - **SCREENCAST**: actions and voiceover for the screen recording.
 - **Production Summary** *(Phase 4)*: spoken-word counts, estimated narration duration per video, section counts, a configurable long-video warning (default three minutes), and the estimation method and its limits.
 
-All four generators are implemented and tested offline. The project owner reported a successful live run of the ONSET, MOTION, and SCREENCAST generation. The Production Summary hasn't been run in a live Google account yet (see [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist)). See [`docs/roadmap.md`](../docs/roadmap.md).
+All four generators are implemented and tested offline. The project owner reported successful live runs of all four (Phases 3B and 4). The Phase 4b cleanup hasn't been run live yet (see [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist)). See [`docs/roadmap.md`](../docs/roadmap.md).

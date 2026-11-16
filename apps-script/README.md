@@ -5,7 +5,8 @@ A Google Apps Script project that reads the master course script from a Google D
 **Status:**
 
 - **Phase 3B (ONSET, MOTION, SCREENCAST, and the manifest):** implemented and tested offline. The project owner reported a successful live run in Google Docs. Item-by-item results and screenshots for the [checklist](#live-verification-checklist) haven't been recorded in the repository.
-- **Phase 4 (the estimator, the Production Summary, and manifest schema 2):** implemented and tested offline. **It hasn't been run in a live Google account yet.** See the [Phase 4 items](#phase-4-production-summary) in the checklist.
+- **Phase 4 (the estimator, the Production Summary, and manifest schema 2):** implemented and tested offline. The project owner reported a successful live run on November 16, 2026 (run `6146a211`).
+- **Phase 4b (cleanup: SCREENCAST examples, PAUSE spacing, the Production Summary overview and wording, and the revised narration):** implemented and tested offline. **It hasn't been run in a live Google account yet.** See [Phase 4b](#phase-4b-cleanup-and-final-acceptance) in the checklist.
 
 All logic except the Google API calls is covered by Node tests that use test doubles.
 
@@ -146,9 +147,9 @@ Stage 1, Video 1 "What Is an API?": 273 spoken words, estimated 1 min 57 s
 Stage 1, Video 2 "Requests and Responses": 287 spoken words, estimated 2 min 3 s
 Stage 1, Video 3 "Understanding JSON": 246 spoken words, estimated 1 min 45 s
 Stage 2, Video 1 "Making API Requests": 280 spoken words, estimated 2 min 0 s
-Stage 2, Video 2 "Handling Errors": 666 spoken words, estimated 4 min 45 s
+Stage 2, Video 2 "Handling Errors": 664 spoken words, estimated 4 min 45 s
 Stage 2, Video 3 "Wrapping Up": 228 spoken words, estimated 1 min 38 s
-Course estimate: 1980 spoken words, 14 min 9 s across 6 videos.
+Course estimate: 1978 spoken words, 14 min 8 s across 6 videos.
 WARNING LONG_VIDEO_ESTIMATE: Stage 2, Video 2 "Handling Errors": estimated 4 min 45 s is over the 3 min 0 s threshold (narration only).
 ```
 
@@ -218,8 +219,9 @@ Rendering rules:
 - **Repeated sections:** when a video has more than one section of the role, each gets a `Part N of M` heading (Heading 3). For example, Stage 2, Video 2 has two ONSET parts.
 - **Labels:** each block starts with its annotation name (`VISUAL`, `VOICEOVER`, `ACTION`, `HIGHLIGHT`) in bold blue.
 - **Spoken and unspoken text:** spoken text (ONSET narration and `VOICEOVER`) is plain black. Production instructions (`ACTION`, `VISUAL`, `HIGHLIGHT`) are gray italics.
-- **Cues:** a `[PAUSE]` cue is shown in bold dark red.
-- **Verbatim text:** every source line becomes one paragraph, unchanged. Blank lines stay as empty paragraphs. URLs and JSON are copied exactly. Nothing is summarized or reworded.
+- **Cues:** a `[PAUSE]` cue is shown as `[PAUSE]` in bold dark red, with 6 points of space before and after. The blank lines that separate a cue's tag line from its neighbors in the script aren't written, so a cue sits directly between the lines around it, in its source position. Blank lines between other paragraphs stay. The parser's IR and the estimator are unaffected.
+- **Technical examples (SCREENCAST only):** in a SCREENCAST `ACTION` or `HIGHLIGHT` block, a line ending with a colon, such as `Run:` or `The response body:`, introduces an example. The next run of non-blank lines, after any blank lines, is shown in Courier New, upright (not italic), and indented. The run ends at a blank line or a cue. This is a layout convention ([`course/README.md`](../course/README.md#technical-examples-in-screencast-sections)). The text itself is never inspected for braces, URLs, or commands, and it's never changed. Code-like text without a lead-in, such as the `"temperature_c": null` highlight or `The Request URL: http://…`, stays a gray italic direction. Narration and the ONSET and MOTION documents never use this style.
+- **Verbatim text:** every source line becomes one paragraph, unchanged. Blank lines between paragraphs stay as empty paragraphs. URLs and JSON are copied exactly. Nothing is summarized or reworded.
 
 The ONSET, MOTION, and SCREENCAST documents are unchanged by Phase 4. A test checks that the generator still writes exactly what `Render` produces.
 
@@ -232,12 +234,13 @@ The fourth document, titled `Production Summary — <course title> — <run ID>`
 | Title and provenance | Course title, subtitle, generation time, source document title and link, run ID, and a note that durations are estimates |
 | Estimator configuration | Words per minute, long-video threshold, screencast allowance, and estimator version |
 | Course overview | Stage, video, and section counts; total spoken words; estimated narration, screencast allowance, and total; videos over the threshold |
-| Video breakdown | For each stage (Heading 2) and video (Heading 3): section sequence, section counts, spoken words (with a note when some are URLs, paths, or code), narration, allowance, estimated total, and status against the threshold |
+| Video overview | A native Google Docs table with one row per video, in source order. The columns are **Video** (`S2 V2 — Handling Errors`), **Spoken words**, **Estimated duration**, and **Status** (`Within` or `Over` the threshold). The header is bold, the two number columns are right-aligned, and cells wrap, so long titles are shown in full. |
+| Video breakdown | For each stage (Heading 2) and video (Heading 3): section sequence, section counts, spoken words, narration, allowance, estimated total, and status against the threshold. When some counted words are URLs, paths, or code, a note says so, with correct singular and plural wording: `Spoken words: 287 (includes 1 URL, path, or code token that may take longer to narrate)`. |
 | Warnings | One bold dark-red line per `LONG_VIDEO_ESTIMATE` warning, or a note saying no video is over the threshold under the current assumptions |
 | Estimation methodology | How words are counted, the speaking rate, the screencast allowance, the threshold rule, the rounding rule, and what the estimate leaves out |
 | Provenance | Run ID, generation time, run folder name, a pointer to `manifest.json`, and the parser and estimator versions and hashes |
 
-The document uses the same plain styles as the other three: built-in headings, normal text, and gray italics for notes. There are no tables, charts, or custom fonts. Durations are shown rounded to the nearest second (`4 min 45 s`). Calculations use the unrounded values.
+The document uses the same plain styles as the other three: built-in headings, normal text, and gray italics for notes. The video overview is its only table. There are no charts or custom fonts. Durations are shown rounded to the nearest second (`4 min 45 s`), in the table too. Calculations use the unrounded values.
 
 Parser warnings (diagnostics) aren't repeated in the Production Summary. They're in the execution log and in the manifest's `warnings`.
 
@@ -330,11 +333,11 @@ Each run folder contains `manifest.json` (`schemaVersion` 2):
       "stageCount": 2,
       "videoCount": 6,
       "sectionCounts": { "ONSET": 6, "MOTION": 3, "SCREENCAST": 4 },
-      "spokenWordCount": 1980,
+      "spokenWordCount": 1978,
       "technicalTokenCount": 7,
-      "narrationDurationSeconds": 848.5714285714286,
+      "narrationDurationSeconds": 847.7142857142857,
       "screencastAllowanceSeconds": 0,
-      "estimatedDurationSeconds": 848.5714285714286,
+      "estimatedDurationSeconds": 847.7142857142857,
       "videosOverThreshold": 1
     },
     "videos": [
@@ -342,7 +345,7 @@ Each run folder contains `manifest.json` (`schemaVersion` 2):
       "… one entry per video …"
     ],
     "warnings": [
-      { "code": "LONG_VIDEO_ESTIMATE", "stageNumber": 2, "videoNumber": 2, "title": "Handling Errors", "estimatedDurationSeconds": 285.42857142857144, "thresholdSeconds": 180, "includesScreencastAllowance": false }
+      { "code": "LONG_VIDEO_ESTIMATE", "stageNumber": 2, "videoNumber": 2, "title": "Handling Errors", "estimatedDurationSeconds": 284.57142857142856, "thresholdSeconds": 180, "includesScreencastAllowance": false }
     ]
   },
   "error": null
@@ -392,7 +395,7 @@ These steps need a person with a Google account. Record the results (and screens
 
 ### Phase 4: Production Summary
 
-**None of these has been done yet.** Update the project files first (see [step 3](#3-add-the-script-files)).
+**The project owner reported a successful live Phase 4 run on November 16, 2026 (run `6146a211`, parser and estimator 0.1.0).** It produced all four documents, with 2 stages, 6 videos, 13 sections, 1,980 spoken words, 14 min 9 s of estimated narration, and one long-video warning. The item-by-item results below weren't supplied, so the boxes are left for the owner to tick. The figures in this list are for the script *before* the Phase 4b edit. After that edit, use the [Phase 4b](#phase-4b-cleanup-and-final-acceptance) figures.
 
 - [ ] `ProductionEstimator.js` and `Summary.js` load without a syntax error, and `ProductionEstimator.estimateProduction` exists. This confirms that the estimator core, including its Unicode regular expression, runs on Apps Script V8.
 - [ ] With no estimator properties set, `validateMasterDocument` logs the default configuration (140, 3, 0), the six per-video lines and course estimate shown in [step 6](#6-validate), and one `LONG_VIDEO_ESTIMATE` warning for Stage 2, Video 2.
@@ -403,10 +406,34 @@ These steps need a person with a Google account. Record the results (and screens
 - [ ] `manifest.json` has `"schemaVersion": 2`, an `estimator` object whose `coreSha256` equals `GeneratedData.estimatorCoreSha256`, and four `output.documents`.
 - [ ] Setting `WORDS_PER_MINUTE` to `230` removes the warning, and setting `SCREENCAST_ALLOWANCE_SECONDS_PER_SECTION` to `60` flags Stage 1, Video 2 and Stage 2, Video 2, but not Stage 2, Video 1, which lands at exactly 180 s. Each change gives a new run folder, and earlier runs are unchanged.
 
+### Phase 4b: cleanup and final acceptance
+
+Phase 4b changes how SCREENCAST technical examples and `[PAUSE]` cues are rendered. It adds a video overview table to the Production Summary and fixes the technical-token wording. It also revises one passage of the master script. **None of these steps has been done yet.** The repository's `course/master-script.md` and your master Google Doc are separate copies. Editing one never changes the other, and earlier generated documents are never updated.
+
+1. **Rename the master Google Doc.** The live run recorded the source title as `Digital Cellar - Master Prduction Script`. Choose **File** → **Rename** and change it to `Digital Cellar - Master Production Script`. The generator records whatever the title actually is. It never corrects titles.
+2. **Apply the revised status-code narration.** In the master Google Doc, open **Edit** → **Find and replace** (**Ctrl+H**, or **⌘+Shift+H** on a Mac). This passage is in Stage 2, Video 2 (*Handling Errors*), in the second paragraph of its first ONSET section.
+   - Find: `Codes in the 400s mean there was a problem with the request the client sent. Codes in the 500s mean something went wrong on the server, even though the request itself was fine.`
+   - Replace with: `Codes in the 400s generally mean the server can't or won't fulfill the client's request. Codes in the 500s mean the server encountered an error while trying to handle the request.`
+   - **Replace** should report exactly one replacement. The preceding sentence, `Codes in the 200s mean the request succeeded.`, is unchanged. Don't add or remove paragraphs. If Docs turns the apostrophes into curly ones, the word count is the same.
+3. **Update the Apps Script files.** `Render.js`, `Summary.js`, and `GoogleServices.js` changed. Replace their contents in the editor, or run `clasp push`. `ProductionScript.js`, `ProductionEstimator.js`, and `GeneratedData.js` didn't change.
+4. **Validate.** Run `validateMasterDocument`. *Expected:* 2 stages, 6 videos, 13 sections, a matching structure, and READY. Stage 2, Video 2 shows `664 spoken words, estimated 4 min 45 s`, and the course estimate is `1978 spoken words, 14 min 8 s across 6 videos.` There's one `LONG_VIDEO_ESTIMATE` warning. If Stage 2, Video 2 still shows 666, step 2 didn't apply.
+5. **Generate.** Run `generateProductionDocuments`. *Expected:* a new run folder with four documents and `manifest.json`.
+6. **SCREENCAST examples.** *Expected:* the four JSON bodies and the two `curl` commands are each in Courier New, upright, indented, and character-for-character identical to the script. Their lead-ins (`Run:`, `The response body:`) and the other directions stay gray italic.
+7. **PAUSE cues.** In ONSET and SCREENCAST, *expected:* each `[PAUSE]` is bold dark red and sits directly between the paragraphs around it, with a small, even gap above and below and no empty paragraphs around it. ONSET has four cues and SCREENCAST has two, in the same places as in the script.
+8. **Production Summary.** *Expected:*
+   - A **Video overview** table after the course overview, with six rows in source order. Only `S2 V2 — Handling Errors` reads `Over`.
+   - The breakdown says `Spoken words: 287 (includes 1 URL, path, or code token that may take longer to narrate)` for Stage 1, Video 2, and uses `tokens` for Stage 1, Video 3 (2) and Stage 2, Video 3 (3).
+   - The title line shows the corrected source title.
+9. **Narration totals.** *Expected:* the course overview shows `Spoken words: 1978` and `Estimated total: 14 min 8 s`, down from 1,980 and 14 min 9 s in run `6146a211`.
+10. **Provenance.** *Expected:* `manifest.json` has `"schemaVersion": 2`, `source.documentTitle` with the corrected title, and a new `source.extractedTextSha256`. The `parser.coreSha256` and `estimator.coreSha256` values match `GeneratedData.js`, and there are four `output.documents`. Run `6146a211`'s folder and documents are still present and unchanged.
+
+Record the results, and the screenshots listed in [`docs/learning-lab.md`](../docs/learning-lab.md), before calling Phase 4b verified.
+
 ## Limitations
 
 - **Read only from the body:** headers, footers, footnote text, and comments aren't read, and multi-tab documents are rejected.
-- **Unchecked formatting:** the Production Summary's formatting has been specified but not yet seen in a real document.
+- **Formatting checked only offline:** Node tests check which paragraph kind each line gets, and that the text is unchanged. The Docs styling itself can only be checked by eye in a live document: Courier New and indentation for examples, cue spacing, and the table's bold header, right-aligned numbers, and wrapping. The Production Summary's formatting was reported working in run `6146a211`, before the Phase 4b table was added.
+- **Technical examples need a lead-in:** only lines after a colon lead-in in a SCREENCAST `ACTION` or `HIGHLIGHT` block are styled as examples. A code fragment written as its own direction, or inside a sentence, stays a direction. A grammar-level marker would be the reliable fix (see [`course/README.md`](../course/README.md#technical-examples-in-screencast-sections)). This phase deliberately doesn't change the grammar.
 - **Estimates, not measurements:** the Production Summary's durations come from a fixed speaking rate and an optional fixed allowance. See [`production/README.md`](../production/README.md#what-the-estimate-leaves-out).
 - **Execution time:** generation runs inside Apps Script's per-execution time limit, about six minutes for consumer accounts. The six-video course is far below it.
 - **Broad scope:** the `drive` scope covers all of the user's Drive files.

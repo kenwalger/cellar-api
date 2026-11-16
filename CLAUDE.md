@@ -16,10 +16,11 @@ The fictional course is *Understanding APIs: A Winery's Digital Cellar*. The Fas
 | 2 | Master course script (six videos), structure oracle, malformed fixtures | **Implemented** (content) |
 | 3A | Portable JavaScript parser, IR, diagnostics, Node tests (`parser/`) | **Implemented** (tested in Node.js; not yet run in Apps Script) |
 | 3B | Google Apps Script adapter, ONSET/MOTION/SCREENCAST generation, manifest (`apps-script/`) | **Implemented and tested offline.** The project owner reported a successful live Google Docs run. Item-by-item checklist results aren't recorded. |
-| 4 | Portable production estimator (`production/`), Production Summary doc, manifest schema 2 | **Implemented and tested offline.** Live Google checkpoint **not yet done**. |
+| 4 | Portable production estimator (`production/`), Production Summary doc, manifest schema 2 | **Implemented and tested offline.** The project owner reported a successful live run (run `6146a211`, November 16, 2026). |
+| 4b | Cleanup: SCREENCAST example styling, compact PAUSE cues, Production Summary overview table and wording, revised status-code narration | **Implemented and tested offline.** Live Google checkpoint **not yet done**. |
 | — | Learning-lab walkthrough and screenshots | Planned |
 
-`docs/screenshots/` contains a placeholder only. Never claim that the Phase 4 additions (estimator in Apps Script, Production Summary, manifest schema 2) work in Google until a person has completed the Phase 4 live checklist in `apps-script/README.md`. Don't invent details of the owner-reported Phase 3B live run. `course/` holds the master script and parser fixtures. Its grammar is defined in `course/README.md`. If the API's behavior changes, recheck the script's examples against it. Don't regenerate `course/fixtures/expected-structure.json` from the script, because it's an independent oracle. Don't describe planned work as done, and don't claim an unimplemented feature works.
+`docs/screenshots/` contains a placeholder only. Never claim that the Phase 4b changes work in Google until a person has completed the Phase 4b live checklist in `apps-script/README.md`. Don't invent details of the owner-reported Phase 3B and Phase 4 live runs. The repository's `course/master-script.md` and the live master Google Doc are separate copies. A script edit reaches generated documents only after the owner applies it to the Google Doc and generates again. `course/` holds the master script and parser fixtures. Its grammar is defined in `course/README.md`. If the API's behavior changes, recheck the script's examples against it. Don't regenerate `course/fixtures/expected-structure.json` from the script, because it's an independent oracle. Don't describe planned work as done, and don't claim an unimplemented feature works.
 
 ## Commands
 
@@ -176,7 +177,7 @@ When behavior changes, update in the same change: `README.md` (endpoints, exampl
 
 ## Document automation architecture
 
-Steps 1 to 6 are implemented (Phases 3A, 3B, and 4) and tested offline. The project owner reported a successful live run of the Phase 3B workflow. The Phase 4 Production Summary hasn't been run live yet.
+Steps 1 to 6 are implemented (Phases 3A, 3B, and 4) and tested offline. The project owner reported successful live runs of Phases 3B and 4. The Phase 4b cleanup hasn't been run live yet.
 
 1. **Master Google Doc**: the authored course script, with sections tagged `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`.
 2. **Structured document parser**: the portable core (`parser/`), fed by the Apps Script `DocumentReader`.

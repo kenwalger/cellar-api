@@ -147,22 +147,20 @@ describe("content rendering", () => {
     const model = render("SCREENCAST");
     const index = model.paragraphs.findIndex((p) => p.text.startsWith("Null is a JSON value"));
     assert.deepEqual(
-      model.paragraphs.slice(index, index + 5).map((p) => p.kind),
-      ["narration", "blank", "cue", "blank", "narration"],
+      model.paragraphs.slice(index, index + 3).map((p) => p.kind),
+      ["narration", "cue", "narration"],
     );
-    assert.equal(model.paragraphs[index + 2].text, "[PAUSE]");
+    assert.equal(model.paragraphs[index + 1].text, "[PAUSE]");
   });
 
   test("ONSET narration and pauses render in order", () => {
     const model = render("ONSET");
     const index = model.paragraphs.findIndex((p) => p.text.startsWith("You might ask which wines"));
     assert.deepEqual(
-      model.paragraphs.slice(index, index + 5).map((p) => [p.kind, p.text.slice(0, 12)]),
+      model.paragraphs.slice(index, index + 3).map((p) => [p.kind, p.text.slice(0, 12)]),
       [
         ["narration", "You might as"],
-        ["blank", ""],
         ["cue", "[PAUSE]"],
-        ["blank", ""],
         ["narration", "That counter"],
       ],
     );
@@ -193,11 +191,40 @@ describe("content rendering", () => {
           }
         }
       }
+      // Blank lines are checked separately (see "PAUSE spacing").
       const actual = render(role)
-        .paragraphs.filter((p) => p.kind === "narration" || p.kind === "instruction" || p.kind === "blank")
+        .paragraphs.filter((p) => ["narration", "instruction", "example"].includes(p.kind))
         .map((p) => p.text);
-      assert.deepEqual(actual, expected, role);
+      assert.deepEqual(
+        actual,
+        expected.filter((text) => text.trim() !== ""),
+        role,
+      );
     }
+  });
+
+  test("MOTION output for the master script keeps every line, blank lines included, with no examples", () => {
+    // The master's MOTION sections have no PAUSE cues, and examples are a
+    // SCREENCAST convention, so Phase 4b changes nothing here.
+    const expected = [];
+    for (const stage of masterDocument.stages) {
+      for (const video of stage.videos) {
+        for (const section of video.sections.filter((s) => s.type === "MOTION")) {
+          for (const block of section.content) {
+            expected.push(["label", block.type]);
+            for (const entry of block.content) {
+              let kind = block.type === "VOICEOVER" ? "narration" : "instruction";
+              if (entry.text.trim() === "") kind = "blank";
+              expected.push([kind, entry.text]);
+            }
+          }
+        }
+      }
+    }
+    const actual = render("MOTION")
+      .paragraphs.filter((p) => ["label", "narration", "instruction", "blank", "example", "cue"].includes(p.kind))
+      .map((p) => [p.kind, p.text]);
+    assert.deepEqual(actual, expected);
   });
 
   test("a role with no sections produces a note instead of content", () => {
@@ -208,5 +235,165 @@ describe("content rendering", () => {
     assert.deepEqual(headings(model, "HEADING1"), []);
     assert.equal(model.paragraphs.at(-1).kind, "note");
     assert.match(model.paragraphs.at(-1).text, /no MOTION sections/);
+  });
+});
+
+describe("PAUSE spacing", () => {
+  function onsetKinds(...content) {
+    const document = ProductionScript.parseProductionScript(
+      lines("Stage 1: A", "Video 1: B", "[ONSET]", ...content, "[/ONSET]"),
+    ).document;
+    return render("ONSET", document)
+      .paragraphs.slice(5)
+      .map((p) => [p.kind, p.text]);
+  }
+
+  test("blank lines next to a cue are dropped; paragraph breaks elsewhere stay", () => {
+    assert.deepEqual(onsetKinds("One.", "", "Two.", "", "", "[PAUSE]", "", "", "Three."), [
+      ["narration", "One."],
+      ["blank", ""],
+      ["narration", "Two."],
+      ["cue", "[PAUSE]"],
+      ["narration", "Three."],
+    ]);
+  });
+
+  test("consecutive cues and cues without blank lines keep their place", () => {
+    assert.deepEqual(onsetKinds("One.", "[PAUSE]", "", "[PAUSE]", "Two."), [
+      ["narration", "One."],
+      ["cue", "[PAUSE]"],
+      ["cue", "[PAUSE]"],
+      ["narration", "Two."],
+    ]);
+  });
+
+  test("every PAUSE in the master script is kept, between the same lines as in the source", () => {
+    const masterLines = master.split("\n").filter((line) => line.trim() !== "");
+    let total = 0;
+    for (const role of ["ONSET", "SCREENCAST"]) {
+      const paragraphs = render(role).paragraphs.filter((p) => p.kind !== "blank");
+      paragraphs.forEach((p, index) => {
+        if (p.kind !== "cue") return;
+        total += 1;
+        assert.equal(p.text, "[PAUSE]");
+        const before = masterLines.indexOf(paragraphs[index - 1].text);
+        assert.equal(masterLines[before + 1], "[PAUSE]", role);
+        assert.equal(masterLines[before + 2], paragraphs[index + 1].text, role);
+      });
+    }
+    // Four PAUSE cues in ONSET sections and two in SCREENCAST VOICEOVER blocks.
+    assert.equal(total, master.split("\n").filter((line) => line.trim() === "[PAUSE]").length);
+  });
+});
+
+describe("SCREENCAST technical examples", () => {
+  const screencast = render("SCREENCAST");
+  const byText = (text) => screencast.paragraphs.filter((p) => p.text === text);
+
+  const examples = [
+    '{"batch_id": "2026-014", "name": "North Block Pinot Noir", "varietal": "Pinot Noir", "vintage": 2026, "status": "fermenting", "temperature_c": 21.4, "days_since_start": 8}',
+    '{"batch_id": "2026-025", "name": "Late Harvest Riesling", "varietal": "Riesling", "vintage": 2026, "status": "fermenting", "temperature_c": null, "days_since_start": 3}',
+    '{"detail": "Batch not found"}',
+    'curl -i "http://127.0.0.1:8000/api/v1/batches?status=spilled"',
+    '{"detail":[{"type":"enum","loc":["query","status"],"msg":"Input should be \'planned\', \'fermenting\', \'aging\' or \'bottled\'","input":"spilled","ctx":{"expected":"\'planned\', \'fermenting\', \'aging\' or \'bottled\'"}}]}',
+    'curl -i "http://127.0.0.1:8000/api/v1/batches?status=Fermenting"',
+  ];
+
+  test("each example in the master script is an example paragraph with its exact source text", () => {
+    const sourceLines = master.split("\n");
+    for (const text of examples) {
+      assert.ok(sourceLines.includes(text), `not in source: ${text}`);
+      assert.deepEqual(
+        byText(text).map((p) => [p.style, p.kind]),
+        [["NORMAL", "example"]],
+        text,
+      );
+    }
+    assert.deepEqual(
+      screencast.paragraphs.filter((p) => p.kind === "example").map((p) => p.text),
+      examples,
+    );
+  });
+
+  test("lead-in lines and other directions stay directions", () => {
+    for (const text of [
+      "Open a terminal. Run:",
+      "Run:",
+      "The response body:",
+      "The response code 200 and the response body:",
+      "The Request URL: http://127.0.0.1:8000/api/v1/batches/2026-014",
+      '"temperature_c": null',
+      "Enter 2026-014 in the batch_id field. Select Execute.",
+    ]) {
+      assert.ok(byText(text).length > 0, text);
+      assert.ok(
+        byText(text).every((p) => p.kind === "instruction"),
+        text,
+      );
+    }
+  });
+
+  test("VOICEOVER narration is unchanged and never an example", () => {
+    const narration = screencast.paragraphs.find((p) => p.text.startsWith("For the next request we'll use a terminal"));
+    assert.equal(narration.kind, "narration");
+    const document = ProductionScript.parseProductionScript(
+      lines("Stage 1: A", "Video 1: B", "[SCREENCAST]", "[VOICEOVER]", "Say this:", "", "curl is a tool.", "[/SCREENCAST]"),
+    ).document;
+    assert.deepEqual(
+      render("SCREENCAST", document)
+        .paragraphs.slice(-4)
+        .map((p) => [p.kind, p.text]),
+      [
+        ["label", "VOICEOVER"],
+        ["narration", "Say this:"],
+        ["blank", ""],
+        ["narration", "curl is a tool."],
+      ],
+    );
+  });
+
+  function screencastBlock(...blockLines) {
+    const document = ProductionScript.parseProductionScript(
+      lines("Stage 1: A", "Video 1: B", "[SCREENCAST]", "[ACTION]", ...blockLines, "[/SCREENCAST]"),
+    ).document;
+    return render("SCREENCAST", document)
+      .paragraphs.slice(6)
+      .map((p) => [p.kind, p.text]);
+  }
+
+  test("an example runs until the next blank line, keeping indentation and line breaks", () => {
+    assert.deepEqual(screencastBlock("Run:", "", "curl \\", '    -i "http://x/y"', "", "Then wait."), [
+      ["instruction", "Run:"],
+      ["blank", ""],
+      ["example", "curl \\"],
+      ["example", '    -i "http://x/y"'],
+      ["blank", ""],
+      ["instruction", "Then wait."],
+    ]);
+  });
+
+  test("an example can follow its lead-in directly, and a PAUSE ends it", () => {
+    assert.deepEqual(screencastBlock("Run:", "ls", "[PAUSE]", "Look."), [
+      ["instruction", "Run:"],
+      ["example", "ls"],
+      ["cue", "[PAUSE]"],
+      ["instruction", "Look."],
+    ]);
+  });
+
+  test("code-like text without a lead-in is not an example", () => {
+    assert.deepEqual(screencastBlock('{"a": 1}', "curl http://x"), [
+      ["instruction", '{"a": 1}'],
+      ["instruction", "curl http://x"],
+    ]);
+  });
+
+  test("the convention applies only to SCREENCAST ACTION and HIGHLIGHT blocks", () => {
+    const document = ProductionScript.parseProductionScript(
+      lines("Stage 1: A", "Video 1: B", "[MOTION]", "[HIGHLIGHT]", "The body:", "", '{"a": 1}', "[/MOTION]"),
+    ).document;
+    assert.ok(!render("MOTION", document).paragraphs.some((p) => p.kind === "example"));
+    assert.ok(!render("ONSET").paragraphs.some((p) => p.kind === "example"));
+    assert.ok(!render("MOTION").paragraphs.some((p) => p.kind === "example"));
   });
 });

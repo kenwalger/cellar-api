@@ -127,19 +127,19 @@ The goal is reproducible estimation, not linguistic accuracy. Known limitations:
 
 ### Acceptance figures
 
-The counts below were calculated by this policy from the current master script, at the default configuration. They match the spoken-word counts recorded during Phase 2 content authoring exactly. Those Phase 2 counts weren't produced by this estimator, so `tests/fixtures.test.js` uses them as an outside check of the policy.
+The counts below were calculated by this policy from the current master script, at the default configuration. They're checked against reference counts that this estimator didn't produce, so `tests/fixtures.test.js` uses them as an outside check of the policy. The reference counts are the spoken-word counts recorded during Phase 2 content authoring. Stage 2, Video 2 has a Phase 4b adjustment: its status-code passage was revised, and a hand count of the changed sentences gives 2 fewer words (666 → 664).
 
-| Video | Title | Phase 2 reference | Counted | Technical tokens | Narration at 140 WPM | Flagged at 3 min |
+| Video | Title | Reference | Counted | Technical tokens | Narration at 140 WPM | Flagged at 3 min |
 |---|---|---:|---:|---:|---:|---|
 | Stage 1, Video 1 | What Is an API? | 273 | 273 | 0 | 117.00 s (1 min 57 s) | No |
 | Stage 1, Video 2 | Requests and Responses | 287 | 287 | 1 | 123.00 s (2 min 3 s) | No |
 | Stage 1, Video 3 | Understanding JSON | 246 | 246 | 2 | 105.43 s (1 min 45 s) | No |
 | Stage 2, Video 1 | Making API Requests | 280 | 280 | 1 | 120.00 s (2 min 0 s) | No |
-| Stage 2, Video 2 | Handling Errors | 666 | 666 | 0 | 285.43 s (4 min 45 s) | **Yes** |
+| Stage 2, Video 2 | Handling Errors | 664 (Phase 2: 666) | 664 | 0 | 284.57 s (4 min 45 s) | **Yes** |
 | Stage 2, Video 3 | Wrapping Up | 228 | 228 | 3 | 97.71 s (1 min 38 s) | No |
-| **Course** | | **1980** | **1980** | **7** | **848.57 s (14 min 9 s)** | **1 video** |
+| **Course** | | **1978** | **1978** | **7** | **847.71 s (14 min 8 s)** | **1 video** |
 
-Stage totals: Stage 1 has 806 words (345.43 s), and Stage 2 has 1174 words (503.14 s).
+Stage totals: Stage 1 has 806 words (345.43 s), and Stage 2 has 1172 words (502.29 s). Before the Phase 4b edit, the course had 1980 words (848.57 s, 14 min 9 s), and Stage 2, Video 2 had 666 words (285.43 s, also displayed as 4 min 45 s).
 
 With `screencastAllowanceSecondsPerSection: 60`, Stage 1, Video 2 also goes over (183 s). Stage 2, Video 1 lands at exactly 180 s, which isn't over the threshold, so it isn't flagged.
 
@@ -159,7 +159,7 @@ Stage totals are the sums of their videos' values, and course totals are the sum
 
 ### Rounding
 
-The output contains unrounded numbers. Rounding happens only for display: `formatDuration` rounds to the nearest whole second, with halves rounding up, and shows minutes and seconds (`285.43` → `4 min 45 s`). Because of this:
+The output contains unrounded numbers. Rounding happens only for display: `formatDuration` rounds to the nearest whole second, with halves rounding up, and shows minutes and seconds (`284.57` → `4 min 45 s`). Because of this:
 
 - A flagged video can *display* as exactly the threshold (for example, 180.3 s shows as `3 min 0 s`).
 - Rounded per-video values may not add up exactly to the rounded total.
@@ -174,7 +174,7 @@ A video gets a `LONG_VIDEO_ESTIMATE` warning when `estimatedDurationSeconds` is 
   stageNumber: 2,
   videoNumber: 2,
   title: "Handling Errors",
-  estimatedDurationSeconds: 285.42857142857144,
+  estimatedDurationSeconds: 284.57142857142856,
   thresholdSeconds: 180,
   includesScreencastAllowance: false,   // true only if this video's allowance is > 0
   message: "Stage 2, Video 2 \"Handling Errors\": estimated 4 min 45 s is over the 3 min 0 s threshold (narration only)."
@@ -202,8 +202,8 @@ Tools should rely on `code` and the numeric fields. The `message` is written for
     stageNumber, videoNumber, title,
     sectionSequence: ["ONSET", "MOTION", "SCREENCAST", "ONSET"],
     sectionCounts: { ONSET: 2, MOTION: 1, SCREENCAST: 1 },
-    spokenWordCount: 666, technicalTokenCount: 0,
-    narrationDurationSeconds: 285.428..., screencastAllowanceSeconds: 0, estimatedDurationSeconds: 285.428...,
+    spokenWordCount: 664, technicalTokenCount: 0,
+    narrationDurationSeconds: 284.571..., screencastAllowanceSeconds: 0, estimatedDurationSeconds: 284.571...,
     warnings: [ /* LONG_VIDEO_ESTIMATE, if any */ ]
   }],
   totals: {

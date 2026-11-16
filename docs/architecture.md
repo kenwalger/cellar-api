@@ -8,7 +8,7 @@ This document has five parts:
 4. The **implemented** portable production estimator (Phase 4).
 5. The **implemented** Google Docs integration: ONSET, MOTION, and SCREENCAST generation (Phase 3B) and the Production Summary (Phase 4).
 
-All implemented code is tested offline. The project owner reported a successful live Google Docs run of the Phase 3B workflow. The Phase 4 additions haven't been run in a real Google account yet. That's a manual checkpoint, described in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist).
+All implemented code is tested offline. The project owner reported successful live Google Docs runs of Phases 3B and 4. The Phase 4b rendering cleanup hasn't been run in a real Google account yet. That's a manual checkpoint, described in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist).
 
 ## Part 1: Implemented API
 
@@ -148,6 +148,7 @@ flowchart TD
 ### Design notes
 
 - **The parser is the only interpreter, and the estimator is the only calculator.** The adapter only turns paragraphs into text, and it never infers structure from formatting. All structure comes from the unchanged parser core. Every number in the Production Summary comes from the estimator core.
+- **Presentation stays in the renderer.** Phase 4b's cleanups don't change the grammar, IR, or estimator. Compact `[PAUSE]` cues (the blank separator lines around a cue aren't written) and SCREENCAST technical examples (identified by a colon lead-in, never by their content) are rendering decisions in `Render.js`. Fonts, spacing, and the Production Summary's native table are applied in `GoogleServices.js`.
 - **The parser and estimator each exist once.** `parser/src/production-script.cjs` and `production/src/production-estimator.cjs` are the sources. `scripts/sync-apps-script.mjs` writes the Apps Script copies, and `--check` (run in CI) fails on any difference.
 - **Logic is testable apart from Google.** Every Google API call is in `GoogleServices.js`. The other files load in Node exactly as Apps Script loads them: as plain scripts in one shared global scope.
 - **The decision comes before the first write.** Configuration (including the estimator settings), document access, extraction, parsing, the structure check, the production estimate, and the output folder are all checked, and all four documents are rendered in memory, before anything is created in Drive. Error-level diagnostics, invalid estimator settings, and an estimator failure all stop the run with no files created. Diagnostic warnings and long-video warnings are allowed and recorded in the manifest.

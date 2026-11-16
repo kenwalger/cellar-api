@@ -50,8 +50,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - `validateMasterDocument()` and `generateProductionDocuments()` log the active estimator configuration, per-video estimates, the course total, and warnings.
   - Production Summary recipes in `docs/learning-lab.md` (Exercises 6 and 7: change the speaking rate, add a screencast allowance).
 
+- Phase 4b cleanup:
+  - SCREENCAST technical examples. In an `ACTION` or `HIGHLIGHT` block, the lines after a lead-in ending with a colon, up to the next blank line, render as a new `example` paragraph kind: Courier New, upright, and indented, with the text unchanged. This is a documented layout convention (`course/README.md`), not a grammar change and not a content heuristic.
+  - A Production Summary **Video overview**: a native Google Docs table (video, spoken words, estimated duration, status) generated from the estimator result, placed between the course overview and the detailed breakdown.
+  - A Phase 4b live verification checklist in `apps-script/README.md`, with exact steps for renaming the master Google Doc and applying the narration edit to it.
+
 ### Changed
 
+- Phase 4b cleanup:
+  - `[PAUSE]` cues render without the blank separator lines around them, and get even spacing (6 pt before and after) in Google Docs. Their text and position are unchanged, and so are the IR and estimator.
+  - Production Summary technical-token note: `includes 1 URL, path, or code token` and `includes N ... tokens`, `that may take longer to narrate`. It replaces the ungrammatical `1 are URLs...`. Counts are unchanged.
+  - `course/master-script.md`, Stage 2, Video 2: the 400s and 500s sentences now say the 400s "generally mean the server can't or won't fulfill the client's request" and the 500s "mean the server encountered an error while trying to handle the request." Spoken words go from 666 to 664 for that video and from 1,980 to 1,978 for the course (14 min 9 s to 14 min 8 s at 140 WPM). Structure is unchanged, and the expected-structure fixture is unchanged. The estimator's reference count for that video is adjusted by a hand count (−2).
+  - The live-status notes record the owner-reported Phase 4 live run (run `6146a211`, November 16, 2026).
 - `generateProductionDocuments()` now creates four documents. The estimate is calculated and every document rendered before the first Drive write, so invalid estimator settings, or a document the estimator refuses, create no folder. Long-video warnings never block generation. The ONSET, MOTION, and SCREENCAST documents are unchanged.
 - The generation manifest moves to **schema version 2**. It adds an `estimator` object (output schema, version, core SHA-256, configuration), an `estimate` object (totals, per-video figures, and long-video warnings, with numbers only), and a `PRODUCTION_SUMMARY` entry in `output.documents`. No version 1 field was removed or renamed. Failure manifests also carry the estimate.
 - `scripts/sync-apps-script.mjs` also generates and drift-checks `apps-script/ProductionEstimator.js`.

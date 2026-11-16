@@ -13,7 +13,7 @@ To be clear about what's what:
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 4 implemented.** The FastAPI application, the master course script, a portable JavaScript parser, a portable production estimator, and Google Apps Script tooling that generates all four documents from a Google Doc exist today. Everything is tested offline. The project owner reported a successful live Google Docs run of the Phase 3B workflow (the first three documents and the manifest). **The Phase 4 Production Summary hasn't been run in a live Google account yet**; that's a manual checkpoint. See [docs/roadmap.md](docs/roadmap.md).
+> **Status: Phase 4b implemented.** The FastAPI application, the master course script, a portable JavaScript parser, a portable production estimator, and Google Apps Script tooling that generates all four documents from a Google Doc exist today. Everything is tested offline. The project owner reported successful live Google Docs runs of Phase 3B and Phase 4 (run `6146a211`). **The Phase 4b cleanup hasn't been run in a live Google account yet.** It changes how SCREENCAST examples and PAUSE cues are rendered, adds a Production Summary overview table, and revises the status-code narration. That's a manual checkpoint (see [apps-script/README.md](apps-script/README.md#phase-4b-cleanup-and-final-acceptance)). See [docs/roadmap.md](docs/roadmap.md).
 
 ## What's in the repository
 
@@ -196,7 +196,7 @@ npm run print-estimate -- ../course/master-script.md      # print the estimate a
 npm run print-estimate -- ../course/master-script.md '{"wordsPerMinute": 160}'
 ```
 
-See [production/README.md](production/README.md) for the word-count policy, the duration method, the warning rule, and the master script's figures. At the defaults (140 words per minute, a three-minute threshold, and no screencast allowance), the course has 1980 spoken words, about 14 min 9 s of narration, and one long video: Stage 2, Video 2.
+See [production/README.md](production/README.md) for the word-count policy, the duration method, the warning rule, and the master script's figures. At the defaults (140 words per minute, a three-minute threshold, and no screencast allowance), the course has 1978 spoken words, about 14 min 8 s of narration, and one long video: Stage 2, Video 2.
 
 ### Apps Script adapter
 
@@ -221,7 +221,10 @@ To run the tooling in Google, follow [apps-script/README.md](apps-script/README.
 3. **Phase 3: Document parser**
    - **3A: Portable parser and validation** (done)
    - **3B: Google Docs integration** (done; live run reported by the project owner): an Apps Script adapter and generation of the three section docs
-4. **Phase 4: Production summary** (implemented; live check pending): a portable estimator and the fourth document. The full learning-lab walkthrough and screenshots are still to come.
+4. **Phase 4: Production summary** (done; live run reported by the project owner): a portable estimator and the fourth document
+   - **4b: Cleanup and final acceptance** (implemented; live check pending): clearer SCREENCAST examples and PAUSE cues, a video overview table, and more precise status-code narration
+
+The full learning-lab walkthrough and screenshots are still to come.
 
 Details are in [docs/roadmap.md](docs/roadmap.md). The planned hands-on tutorial is outlined in [docs/learning-lab.md](docs/learning-lab.md).
 
