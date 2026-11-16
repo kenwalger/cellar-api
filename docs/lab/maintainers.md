@@ -21,7 +21,8 @@ Then work through [Exercises 0 to 5](README.md) as a learner would, in a POSIX s
 | Documented outputs | Each `<!-- lab-output … -->` block's command is run with Node, from the stated folder, and its output and exit status must match the page exactly. For Exercise 3, it first makes the broken copy itself, deleting line 387 only if that line is `[/ONSET]`, and removes the copy afterwards. |
 | Estimate tables | Each `<!-- lab-estimate … -->` table must equal the estimator's result for the master script with those options |
 | Example manifests | `docs/lab/examples/*.json` must equal what the real `Generator` produces offline with test doubles, and Exercise 5's claims about them must hold. For example, both runs have the same source hash, which equals the SHA-256 of `course/master-script.md`. |
-| Links | Relative links in the lab pages, `README.md`, and `docs/*.md` point to existing files and headings |
+| Links | Relative links in the lab pages, `README.md`, and `docs/*.md` point to existing files and headings. Links to `github.com/kenwalger/cellar-api` point to existing paths and headings. On the lab pages, relative links reach only files that GitHub Pages publishes. |
+| Pages navigation | Every published page is listed in `_data/lab.yml` with the URL Jekyll gives it, and `docs/index.md` is the site's home page |
 | Commands | Every `npm run <script>` in a lab code block exists in a `package.json`, and every `node <file>` exists |
 | Mermaid | Each Mermaid block starts with a `flowchart` direction, has balanced brackets and quotes, and has no stray lines |
 | Private data | No Google Docs, Drive, or Apps Script URLs with IDs, Drive-like IDs, access tokens, API keys, or email addresses in the lab pages or examples |
@@ -33,9 +34,9 @@ Commands that aren't Node commands, such as `grep`, `cp`, `sha256sum`, and `git 
 
 Never regenerate these from parser or estimator output. They're the outside oracles the code is tested against:
 
-- [`course/fixtures/expected-structure.json`](../../course/fixtures/expected-structure.json): the course outline
-- [`course/fixtures/malformed-script.md`](../../course/fixtures/malformed-script.md): the four defect cases
-- The reference word counts in [`production/tests/fixtures.test.js`](../../production/tests/fixtures.test.js)
+- [`course/fixtures/expected-structure.json`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/expected-structure.json): the course outline
+- [`course/fixtures/malformed-script.md`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/malformed-script.md): the four defect cases
+- The reference word counts in [`production/tests/fixtures.test.js`](https://github.com/kenwalger/cellar-api/blob/main/production/tests/fixtures.test.js)
 
 The lab's own outputs, tables, and example manifests **are** generated, on purpose. They're teaching material that must follow the code, not oracles.
 
@@ -73,7 +74,7 @@ Keep the three levels apart in every page you write:
 | **Owner-reported live** | The project owner ran it in Google and reported success | Phase 3B role documents, Phase 4 Production Summary (run `6146a211`). Item-by-item checklists weren't recorded. |
 | **Not yet live-verified** | Implemented and tested offline only | Phase 4b presentation: monospaced examples, compact `[PAUSE]` cues, the overview table, the revised narration in a live Doc |
 
-Move an item up only when a person has run the [live checklist](../../apps-script/README.md#live-verification-checklist) and recorded the result. Never write "verified in Google" because tests pass.
+Move an item up only when a person has run the [live checklist](https://github.com/kenwalger/cellar-api/blob/main/apps-script/README.md#live-verification-checklist) and recorded the result. Never write "verified in Google" because tests pass.
 
 ## A 60-minute workshop
 
@@ -92,13 +93,80 @@ Exercise 6 doesn't fit a 60-minute slot, because Apps Script setup alone takes 1
 
 ## Publishing the lab with GitHub Pages
 
-The lab is written so that it can be published with GitHub Pages without a build step or new dependencies. **Nothing is deployed yet, and there is no published URL.** To publish it, a repository admin would:
+The lab is set up to be published at **<https://kenwalger.github.io/cellar-api/>** by GitHub Pages' built-in Jekyll build, with the Merlot theme. **Pages hasn't been enabled yet, and the site has never been built or viewed.** No deployment workflow was added. Pages builds the site itself when it's enabled.
 
-1. Open **Settings** → **Pages**, choose **Deploy from a branch**, branch `main`, folder **`/ (root)`**, and save. Use the root, not `/docs`, so that the lab's links into `course/`, `parser/`, and the other folders resolve on the site.
-2. Wait for the Pages build, then open `<site URL>/docs/` to see the [lab home page](../index.md).
+### How the site is configured
 
-How it renders:
+| File | Purpose |
+|---|---|
+| `_config.yml` | Site title and description, `url` and `baseurl` (`/cellar-api`), `theme: jekyll-theme-merlot`, the plugins the lab relies on, the lab layout for every page, the home page at `/`, and the `exclude` list |
+| `_data/lab.yml` | The navigation: the reading order (used for previous and next links) and the reference pages |
+| `_layouts/lab.html` | Merlot's own `default` layout, wrapped with the lab navigation at the top and previous and next links at the bottom. It adds the Mermaid loader only on pages that have a diagram. |
+| `_includes/lab-mermaid.html` | Loads Mermaid once, from jsDelivr, and draws the page's diagrams |
+| `assets/css/style.scss` | Imports Merlot's stylesheet, then adds a few rules for contrast, code and table overflow, and the navigation |
 
-- GitHub Pages' default Jekyll build turns the Markdown into HTML and rewrites relative `.md` links. No `_config.yml` is needed. The checker makes sure no lab page contains Liquid syntax.
-- The **Mermaid diagram** on the home page renders on GitHub.com natively. On the Pages site, a small script on that page loads Mermaid from a CDN (jsDelivr) and draws the diagram. Without JavaScript, or if the CDN is blocked, the diagram's source text is shown instead, and the text flow in the [lab overview](README.md#the-system-in-one-picture) still works.
-- With the root as the publishing source, every Markdown file in the repository becomes a page. That includes the master script, which is plain text and reads as paragraphs.
+**Why Merlot.** It's one of GitHub Pages' built-in themes, so it needs no `remote_theme`, no Gemfile in the repository, and no build workflow. Its burgundy-and-parchment palette suits a winery course, and its serif body text reads well in long instructions. The customizations are deliberately small:
+- Links are a darker blue (5.9:1 contrast instead of Merlot's 4.2:1) and underlined in the content.
+- Table headers are a darker wine color (6.8:1 instead of 3.2:1).
+- Wide tables and code blocks scroll inside the column instead of overflowing it.
+- Long inline paths wrap.
+
+Code blocks are never re-wrapped, so copied commands and output are exactly what's shown.
+
+**What's published.** Only `docs/index.md` (served as the site's home page), `docs/lab/` (pages, example manifests, and the example script), and, once it has images, `docs/screenshots/`. `_config.yml` excludes everything else: the root documents, `api/`, `course/`, `parser/`, `production/`, `apps-script/`, `scripts/`, `tests/`, and the other pages in `docs/`. Those stay on GitHub, where source files are shown as source.
+
+### Links and the /cellar-api base path
+
+A project site lives under `/cellar-api/`, so a link written as `/docs/lab/` would land on `kenwalger.github.io/docs/lab/` and fail. The lab avoids that in three ways:
+
+1. **Links between lab pages** are relative `.md` links, such as `[Exercise 2](02-parse-and-validate.md)`. On GitHub, they open the Markdown file. On the site, the `jekyll-relative-links` plugin rewrites them to the published page, with the base path included. Don't link to a folder: link to its `README.md`.
+2. **Links to source files** (the master script, fixtures, READMEs, and code) are full GitHub URLs, such as `https://github.com/kenwalger/cellar-api/blob/main/course/master-script.md`. They work the same way in both places, and GitHub shows source with line numbers and history.
+3. **Downloadable lab files** (`examples/*.json` and `examples/any-content-script.txt`) are relative links. Jekyll copies them unchanged.
+
+The layout's own links (navigation and previous and next) go through Jekyll's `relative_url` filter. Lab pages themselves contain no Liquid, so they read normally on GitHub too.
+
+`node scripts/lab-docs.mjs --check` enforces this. A relative link from a published page must reach a published file, or the check names the GitHub URL to use instead. GitHub URLs must point to an existing file and heading. Every published page must be listed in `_data/lab.yml` with the URL Jekyll will give it.
+
+### Enable GitHub Pages (manual, one time)
+
+1. On GitHub, open the repository's **Settings** → **Pages**.
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**.
+3. Set **Branch** to `main` and the folder to **`/ (root)`**, then select **Save**.
+4. Open the **Actions** tab and wait for the **pages build and deployment** run to finish, which usually takes a minute or two. If it fails, its log names the file and line.
+5. Open <https://kenwalger.github.io/cellar-api/>.
+
+Don't add a `.nojekyll` file. The site depends on Jekyll.
+
+### Verify the deployed site
+
+Work through this list after the first deployment, and after any change to `_config.yml`, `_layouts/`, `_includes/`, `_data/`, or `assets/`:
+
+- [ ] `https://kenwalger.github.io/cellar-api/` shows the lab home page in the Merlot theme, with the site title in the ribbon.
+- [ ] The architecture diagram is drawn as a flowchart, not shown as code. With JavaScript turned off, its source is shown instead.
+- [ ] **All lab pages** opens a list of every page. Previous and next links walk from the lab home through Exercise 6.
+- [ ] A link to another lab page goes to a `.html` page under `/cellar-api/`, not to a `.md` file or a URL without `/cellar-api/`.
+- [ ] Links to source files open on GitHub, and the example manifest links download or show JSON.
+- [ ] Code blocks and estimate tables scroll sideways on a narrow window, and the page itself doesn't.
+- [ ] `https://kenwalger.github.io/cellar-api/README.html` and `/cellar-api/course/master-script.html` return 404, because only the lab is published.
+
+Record the date and anything that didn't match. Until someone has done this, describe the site as configured, not as verified.
+
+### Test the site locally (optional)
+
+This needs Ruby 3 and Bundler, which aren't part of this repository's toolchain. Use a scratch `Gemfile`, which `.gitignore` excludes:
+
+```bash
+printf 'source "https://rubygems.org"\ngem "github-pages", group: :jekyll_plugins\ngem "webrick"\n' > Gemfile
+bundle install
+bundle exec jekyll serve
+```
+
+Then open <http://127.0.0.1:4000/cellar-api/>. The `github-pages` gem pins the same Jekyll, plugin, and theme versions that GitHub Pages uses. Delete `Gemfile`, `Gemfile.lock`, and `_site/` when you're done. These steps haven't been run for this repository yet.
+
+### Adding a page to the lab
+
+1. Create the Markdown file in `docs/lab/`. Start it with a `# Heading`, which becomes the page title. Don't add front matter or Liquid.
+2. Link to other lab pages with relative `.md` links, and to repository source files with full GitHub URLs.
+3. Add the page to `_data/lab.yml`: in `sequence` if it belongs in the reading order, or in `reference` if not. Give it the URL Jekyll will publish it at: `name.md` becomes `/docs/lab/name.html`, and a folder's `README.md` becomes `/docs/lab/folder/`.
+4. Add the "**Next:**" line that the neighboring pages use, for readers on GitHub.
+5. Run `node scripts/lab-docs.mjs --check`. It fails if the page is missing from the navigation, a URL is wrong, or a link wouldn't work on the site.

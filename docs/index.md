@@ -34,7 +34,9 @@ flowchart TD
     H --> M["manifest.json: provenance"]
 ```
 
-Everything up to the in-memory render is plain JavaScript that runs, and is tested, in Node.js. The core lab exercises it locally. Only the last step writes to Google Drive, through Google Apps Script. Invalid estimator settings also stop a run before anything is written. Each part is described in [the architecture notes](architecture.md).
+If the diagram doesn't appear, the block above is its source, and the [lab overview](lab/README.md#the-system-in-one-picture) has the same flow as text.
+
+Everything up to the in-memory render is plain JavaScript that runs, and is tested, in Node.js. The core lab exercises it locally. Only the last step writes to Google Drive, through Google Apps Script. Invalid estimator settings also stop a run before anything is written. Each part is described in [the architecture notes](https://github.com/kenwalger/cellar-api/blob/main/docs/architecture.md).
 
 ## Exercises
 
@@ -56,7 +58,7 @@ Exercise 6 runs the real workflow. You paste the script into a Google Doc, add t
 
 ## The subject of the course
 
-The scripts are for a fictional video course, *Understanding APIs: A Winery's Digital Cellar*. The small read-only winery API it teaches is in this repository, and you can [run it locally](../README.md#running-the-api) with Python and uv. The lab doesn't need it.
+The scripts are for a fictional video course, *Understanding APIs: A Winery's Digital Cellar*. The small read-only winery API it teaches is in this repository, and you can [run it locally](https://github.com/kenwalger/cellar-api/blob/main/README.md#running-the-api) with Python and uv. The lab doesn't need it.
 
 ## Screenshots
 
@@ -65,20 +67,3 @@ No screenshots have been published yet. They'll be added here from real runs onl
 ## Source
 
 The source code, the issue tracker, and the full documentation are in the GitHub repository [kenwalger/cellar-api](https://github.com/kenwalger/cellar-api). It's MIT licensed, © 2026 Ken W. Alger.
-
-<script type="module">
-  // On a GitHub Pages build, draw the Mermaid diagram above. GitHub.com renders it natively and doesn't run this script.
-  const blocks = document.querySelectorAll("code.language-mermaid, pre.language-mermaid code, div.language-mermaid code");
-  if (blocks.length > 0) {
-    const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
-    for (const code of blocks) {
-      const container = code.closest("div.language-mermaid") || code.closest("pre") || code;
-      const diagram = document.createElement("pre");
-      diagram.className = "mermaid";
-      diagram.textContent = code.textContent;
-      container.replaceWith(diagram);
-    }
-    mermaid.initialize({ startOnLoad: false });
-    await mermaid.run();
-  }
-</script>

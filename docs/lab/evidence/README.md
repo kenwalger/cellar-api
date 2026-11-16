@@ -2,7 +2,7 @@
 
 This guide lists what to capture while working through the lab, so that a learner can show their work and the project owner can illustrate the lab with **real** images.
 
-**Inventory status: no screenshots have been captured yet.** [`docs/screenshots/`](../../screenshots) holds only a placeholder. Never add a generated, mocked-up, or edited-to-look-real image. Every screenshot must come from an actual run. Update the **Status** column when an image is added.
+**Inventory status: no screenshots have been captured yet.** [`docs/screenshots/`](https://github.com/kenwalger/cellar-api/tree/main/docs/screenshots) holds only a placeholder. Never add a generated, mocked-up, or edited-to-look-real image. Every screenshot must come from an actual run. Update the **Status** column when an image is added.
 
 ## Rules for every screenshot
 

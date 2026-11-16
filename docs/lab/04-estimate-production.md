@@ -16,7 +16,7 @@ The estimator reads the parser's IR. It never rereads the script text. It does t
 2. **Converts words to time** at an assumed speaking rate: seconds = words × 60 ÷ words per minute. You can optionally add a fixed allowance for each SCREENCAST section.
 3. **Flags long videos.** A video is flagged when its estimate is strictly **over** the threshold (3 minutes by default). A video exactly at the threshold isn't flagged.
 
-The full method is in [`production/README.md`](../../production/README.md).
+The full method is in [`production/README.md`](https://github.com/kenwalger/cellar-api/blob/main/production/README.md).
 
 ## Steps
 

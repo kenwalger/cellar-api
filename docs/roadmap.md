@@ -78,8 +78,18 @@ A narrowly scoped cleanup based on the live run's documents. There's no new phas
 A guided, local-first lab in [`docs/lab/`](lab/README.md) that teaches the existing system. It adds no application features.
 
 - Five core exercises (about 57 minutes, no Google account): inspect the source, parse and validate, break the contract, estimate production, and provenance and regeneration. There's one optional Google Docs exercise.
-- A GitHub Pages-ready landing page ([`docs/index.md`](index.md)) with a Mermaid architecture diagram. Nothing has been deployed.
+- A landing page ([`docs/index.md`](index.md)) with a Mermaid architecture diagram.
 - An evidence and screenshot guide, a troubleshooting page, and a maintainer and instructor guide with a 60-minute workshop plan.
 - Instructional example manifests produced offline by the real generator code with test doubles, clearly labeled as not from a live run.
 - A learner-facing outline command for the parser (`npm run print-outline`), and `node scripts/lab-docs.mjs --check` in CI, which keeps the documented outputs, estimate tables, example manifests, links, and commands in step with the code.
 - **Not done:** no screenshots have been captured yet (see the [evidence inventory](lab/evidence/README.md#inventory)), and the Phase 4b live checkpoint is still open.
+
+### Phase 5a: GitHub Pages publishing ✅ (configured; not yet enabled)
+
+The lab is set up to be published at <https://kenwalger.github.io/cellar-api/> with GitHub Pages' built-in Merlot theme, from `main`, folder `/ (root)`. There's no build workflow and no Gemfile.
+
+- `_config.yml` sets the theme and the `/cellar-api` base path, publishes `docs/index.md` as the home page, and excludes everything except the lab.
+- Lab navigation (all pages, plus previous and next) comes from `_data/lab.yml` through a small layout that wraps Merlot's own.
+- The Mermaid diagram is drawn by a loader that's added only to pages with a diagram. Its source stays visible as the fallback.
+- Links from lab pages to source files now point to GitHub. `scripts/lab-docs.mjs --check` enforces the Pages link rules and the navigation.
+- **Not done:** enabling Pages in the repository settings, and checking the deployed site with the [checklist](lab/maintainers.md#verify-the-deployed-site). The site has never been built, because there's no local Ruby environment.

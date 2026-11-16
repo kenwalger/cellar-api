@@ -4,7 +4,7 @@ This lab teaches **deterministic document automation** using a working system. Y
 
 Everything in the five core exercises runs locally, against files in this repository, with no Google account. An optional sixth exercise runs the real Google Docs workflow.
 
-The script is for a fictional course, *Understanding APIs: A Winery's Digital Cellar*. The winery API in [`api/`](../../api) is what that course teaches. You don't need to run it for this lab.
+The script is for a fictional course, *Understanding APIs: A Winery's Digital Cellar*. The winery API in [`api/`](https://github.com/kenwalger/cellar-api/tree/main/api) is what that course teaches. You don't need to run it for this lab.
 
 ## Who it's for
 
@@ -52,7 +52,7 @@ By the end of the lab you should be able to:
 
 ## How the lab works
 
-- **The master script is read-only.** Never edit [`course/master-script.md`](../../course/master-script.md). When an exercise changes a script, it changes a copy in `lab-work/`, a scratch folder that Git ignores.
+- **The master script is read-only.** Never edit [`course/master-script.md`](https://github.com/kenwalger/cellar-api/blob/main/course/master-script.md). When an exercise changes a script, it changes a copy in `lab-work/`, a scratch folder that Git ignores.
 - **Every command's output is checked.** The outputs and tables in these pages are refreshed from the repository and verified in CI (see the [maintainer guide](maintainers.md)). If your output differs, you're probably on a different commit, or a file was edited.
 - **Capture evidence as you go.** Each exercise ends with what to capture. The full list is in the [evidence guide](evidence/README.md).
 - **Offline isn't live.** The local exercises prove what the parser, estimator, and generator logic do. They don't prove anything about Google Docs. Only Exercise 6 does that.
@@ -65,7 +65,7 @@ master script ──► parser ──► IR + diagnostics ──► any errors? 
                                                                                                   Production Summary, manifest.json
 ```
 
-The [lab home page](../index.md) has the same flow as a diagram, and [`docs/architecture.md`](../architecture.md) describes each part.
+The [lab home page](../index.md) has the same flow as a diagram, and [`docs/architecture.md`](https://github.com/kenwalger/cellar-api/blob/main/docs/architecture.md) describes each part.
 
 ## Reference
 
@@ -73,7 +73,7 @@ The [lab home page](../index.md) has the same flow as a diagram, and [`docs/arch
 - [Evidence and screenshot guide](evidence/README.md)
 - [Maintainer and instructor guide](maintainers.md)
 - [Example manifests](examples/README.md)
-- Script grammar: [`course/README.md`](../../course/README.md#script-grammar)
-- Parser, IR, and diagnostic codes: [`parser/README.md`](../../parser/README.md)
-- Estimator method: [`production/README.md`](../../production/README.md)
-- Google Docs setup: [`apps-script/README.md`](../../apps-script/README.md)
+- Script grammar: [`course/README.md`](https://github.com/kenwalger/cellar-api/blob/main/course/README.md#script-grammar)
+- Parser, IR, and diagnostic codes: [`parser/README.md`](https://github.com/kenwalger/cellar-api/blob/main/parser/README.md)
+- Estimator method: [`production/README.md`](https://github.com/kenwalger/cellar-api/blob/main/production/README.md)
+- Google Docs setup: [`apps-script/README.md`](https://github.com/kenwalger/cellar-api/blob/main/apps-script/README.md)

@@ -38,7 +38,7 @@ The options were rejected. Look for a typo in an option name (such as `wordsPerM
 
 ## Google Docs extension
 
-These cover the most common problems. The full reference is [`apps-script/README.md`](../../apps-script/README.md).
+These cover the most common problems. The full reference is [`apps-script/README.md`](https://github.com/kenwalger/cellar-api/blob/main/apps-script/README.md).
 
 | Symptom | Likely cause | What to do |
 |---|---|---|

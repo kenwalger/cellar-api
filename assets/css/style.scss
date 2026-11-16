@@ -1,0 +1,106 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+// Learning-lab adjustments on top of Merlot. Keep this file short: the theme
+// supplies the look, and these rules only fix contrast, overflow, and navigation.
+
+// Contrast. Merlot's link blue (#417090) is 4.2:1 on its parchment background,
+// and its table-header red (#cd596b) is 3.2:1. Both are below WCAG AA for body
+// text. These darker shades are about 5.9:1 and 6.8:1.
+a,
+a:hover {
+  color: #2c5a78;
+}
+
+#main_content a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+th {
+  color: #7c334f;
+}
+
+// Long paths and identifiers in inline code wrap instead of widening the page.
+#main_content :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+// Code blocks and terminal output scroll sideways. Their text is never
+// wrapped or reflowed, so what you copy is exactly what's shown.
+#main_content pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#main_content pre code {
+  white-space: pre;
+}
+
+// Wide tables scroll inside the content column instead of overflowing it.
+#main_content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+// Mermaid diagrams fit the column.
+#main_content pre.mermaid {
+  text-align: center;
+  white-space: normal;
+}
+
+#main_content pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+// Lab navigation (_layouts/lab.html).
+.lab-nav,
+.lab-pager {
+  font-family: 'Open Sans', Myriad, Calibri, sans-serif;
+  font-size: .9em;
+}
+
+.lab-nav {
+  margin-bottom: 1.5em;
+  padding-bottom: .5em;
+  border-bottom: 1px solid #d3ccc1;
+}
+
+.lab-nav p {
+  margin: 0 0 .4em;
+}
+
+.lab-nav summary {
+  cursor: pointer;
+  color: #7c334f;
+  font-weight: bold;
+}
+
+.lab-nav ol,
+.lab-nav ul {
+  margin: .4em 0 .6em;
+}
+
+.lab-nav a[aria-current="page"] {
+  color: #7c334f;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.lab-pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .5em 1em;
+  margin: 2em 0 1em;
+  padding-top: 1em;
+  border-top: 1px solid #d3ccc1;
+}
+
+.lab-pager .lab-next {
+  margin-left: auto;
+}

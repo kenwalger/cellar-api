@@ -29,7 +29,7 @@ To be clear about what's what:
 | 5 | [Provenance and regeneration](docs/lab/05-provenance-and-regeneration.md) | 10 min |
 | 6 | [Optional: generate the Google Docs](docs/lab/06-google-docs-extension.md) | 45 to 60 min |
 
-[`docs/index.md`](docs/index.md) is a landing page that's ready for GitHub Pages (not deployed). Instructors and maintainers should read [the maintainer guide](docs/lab/maintainers.md).
+The lab is set up to be published with GitHub Pages and the Merlot theme at <https://kenwalger.github.io/cellar-api/>, with [`docs/index.md`](docs/index.md) as its home page. Pages hasn't been enabled yet. The one-time settings change is in the [maintainer guide](docs/lab/maintainers.md#publishing-the-lab-with-github-pages), which instructors and maintainers should read anyway.
 
 ## What's in the repository
 

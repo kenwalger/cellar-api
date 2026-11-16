@@ -1,0 +1,74 @@
+# GitHub Pages configuration for the learning lab.
+# Published from the main branch, folder / (root), at https://kenwalger.github.io/cellar-api/
+# See docs/lab/maintainers.md, "Publishing the lab with GitHub Pages".
+
+title: "Winery API Document Automation Lab"
+description: "A hands-on developer learning lab for deterministic document generation, validation, estimation, and provenance."
+url: "https://kenwalger.github.io"
+baseurl: "/cellar-api"
+lang: en-US
+theme: jekyll-theme-merlot
+show_downloads: false
+
+# All of these are enabled by default on GitHub Pages. They're listed so the
+# behavior the lab depends on is explicit:
+#   optional-front-matter  publishes Markdown files that have no front matter
+#   readme-index           publishes docs/lab/README.md as docs/lab/index.html
+#   relative-links         rewrites links to .md files into links to their pages,
+#                          with the /cellar-api base path
+#   titles-from-headings   uses each page's first heading as its title
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-readme-index
+  - jekyll-relative-links
+  - jekyll-titles-from-headings
+  - jekyll-seo-tag
+
+relative_links:
+  enabled: true
+  collections: false
+
+defaults:
+  # Every published page (all are under docs/) gets the lab layout:
+  # Merlot plus lab navigation.
+  - scope:
+      path: "docs"
+      type: "pages"
+    values:
+      layout: lab
+  # The lab home page is the site's entry point, at /cellar-api/.
+  - scope:
+      path: "docs/index.md"
+    values:
+      permalink: /
+
+# Only docs/index.md and docs/lab/ (and docs/screenshots/, once it has images)
+# are published. Everything else in the repository is linked on GitHub instead,
+# where source files are shown as source. scripts/lab-docs.mjs reads this list.
+exclude:
+  - README.md
+  - CHANGELOG.md
+  - CLAUDE.md
+  - CODE_OF_CONDUCT.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - LICENSE
+  - pyproject.toml
+  - uv.lock
+  - commit-message.txt
+  - api
+  - apps-script
+  - course
+  - parser
+  - production
+  - scripts
+  - tests
+  - prompts
+  - lab-work
+  - docs/architecture.md
+  - docs/roadmap.md
+  - docs/learning-lab.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor

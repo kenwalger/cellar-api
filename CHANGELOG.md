@@ -64,7 +64,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - `npm run print-outline` in `parser/` (`src/outline.js`, `src/print-outline.js`, with 5 tests): a Node-only text outline of a parse result, with sections in order, source lines, annotation counts, and diagnostics. The portable parser core is unchanged.
   - `scripts/lab-docs.mjs`: refreshes, and with `--check` verifies, the lab's documented command outputs, estimate tables, and example manifests against the current code, plus relative links and heading anchors, referenced commands, Mermaid syntax, Liquid safety, and the absence of private Google identifiers. It has no dependencies.
 
+- GitHub Pages publishing (Phase 5a):
+  - `_config.yml` for GitHub Pages' built-in Merlot theme (`jekyll-theme-merlot`), with `url` and `baseurl` for `https://kenwalger.github.io/cellar-api/`. `docs/index.md` is the home page at `/`. Every page gets the lab layout. An `exclude` list publishes only the lab (`docs/index.md` and `docs/lab/`), not the source, fixtures, or root documents.
+  - `_data/lab.yml` (the reading order and reference pages) and `_layouts/lab.html`, which wraps Merlot's default layout with an "All lab pages" list, links to the lab home, the overview, and GitHub, and previous and next links. All of its links use `relative_url`.
+  - `_includes/lab-mermaid.html`: Mermaid from jsDelivr, loaded and initialized once, only on pages with a diagram, in Merlot's colors. The diagram's source stays visible if JavaScript or the CDN is unavailable.
+  - `assets/css/style.scss`: imports Merlot, then darkens link and table-header colors to meet WCAG AA contrast, underlines content links, wraps long inline code, makes wide tables and code blocks scroll inside the column (without re-wrapping code), and styles the navigation.
+  - `scripts/lab-docs.mjs --check` also checks Pages link rules: a relative link from a published page must reach a published file, and links to `github.com/kenwalger/cellar-api` must point to an existing path and heading. It checks that every published page is in `_data/lab.yml` with the URL Jekyll gives it, and that `docs/index.md` is the home page.
+
 ### Changed
+
+- Phase 5a:
+  - In the published lab pages, 38 links to repository files outside the lab (the master script, fixtures, READMEs, `docs/architecture.md`, and `api/`) now point to GitHub, with their anchors kept, so they don't 404 on the site.
+  - `docs/index.md` no longer embeds its own Mermaid script (the layout adds it), and it points to a text version of the flow.
+  - `docs/lab/maintainers.md` documents the Pages configuration, the choice of Merlot, base-path handling, the manual Settings steps, a checklist for the deployed site, optional local preview, and how to add a page.
+  - `.gitignore` excludes local Jekyll output and a scratch `Gemfile`. `README.md`, `CLAUDE.md`, `docs/roadmap.md`, and `docs/architecture.md` were updated.
 
 - Phase 5:
   - CI runs `node scripts/lab-docs.mjs --check` in the `parser` job.

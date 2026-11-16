@@ -25,3 +25,10 @@ Thumbs.db
 
 # Learning lab scratch folder (docs/lab/)
 lab-work/
+
+# Local GitHub Pages preview (docs/lab/maintainers.md)
+_site/
+.jekyll-cache/
+.sass-cache/
+Gemfile
+Gemfile.lock

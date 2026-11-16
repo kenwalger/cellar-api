@@ -58,7 +58,7 @@ cd parser
    node src/print-ir.js ../course/master-script.md > ../lab-work/master-ir.json
    ```
 
-   Search the file for `"Handling Errors"`. You'll find the video's `sections` array. Each section has a `type`, its `sourceLine` and `endLine`, and `content`. In MOTION and SCREENCAST sections, `content` is a list of blocks (`"kind": "block"`, with a `type` such as `VOICEOVER`), each holding the exact source lines. In ONSET sections, it's narration text and `PAUSE` cues. Every item records its `sourceLine`, so any later message can point at the line it came from. The IR format is documented in [`parser/README.md`](../../parser/README.md#intermediate-representation).
+   Search the file for `"Handling Errors"`. You'll find the video's `sections` array. Each section has a `type`, its `sourceLine` and `endLine`, and `content`. In MOTION and SCREENCAST sections, `content` is a list of blocks (`"kind": "block"`, with a `type` such as `VOICEOVER`), each holding the exact source lines. In ONSET sections, it's narration text and `PAUSE` cues. Every item records its `sourceLine`, so any later message can point at the line it came from. The IR format is documented in [`parser/README.md`](https://github.com/kenwalger/cellar-api/blob/main/parser/README.md#intermediate-representation).
 
 3. **Confirm it's deterministic.** Parse again and compare the two files:
 
@@ -69,7 +69,7 @@ cd parser
 
    *Expected:* `identical`. The parser uses no clock, randomness, or network, so the same input always gives the same output.
 
-4. **Check against the independent outline.** [`course/fixtures/expected-structure.json`](../../course/fixtures/expected-structure.json) was written by hand from the course plan, before the script existed. The parser's acceptance tests compare the parsed structure with it:
+4. **Check against the independent outline.** [`course/fixtures/expected-structure.json`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/expected-structure.json) was written by hand from the course plan, before the script existed. The parser's acceptance tests compare the parsed structure with it:
 
    ```bash
    node --test tests/fixtures.test.js

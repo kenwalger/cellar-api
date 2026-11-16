@@ -1,7 +1,8 @@
 // Keeps the learning lab (docs/lab/) in step with the code it teaches.
 //
 //   node scripts/lab-docs.mjs           refresh documented outputs, estimate tables, and example manifests
-//   node scripts/lab-docs.mjs --check   verify them, plus links, commands, Mermaid, and private identifiers (CI)
+//   node scripts/lab-docs.mjs --check   verify them, plus links (including GitHub Pages rules), navigation, commands,
+//                                       Mermaid, and private identifiers (CI)
 //
 // Documented outputs come from running the repository's own commands, and the
 // estimate tables come from the estimator. The example manifests come from the
@@ -300,19 +301,142 @@ function withoutFences(text) {
   return text.replace(/^\s*```[\s\S]*?^\s*```/gm, "");
 }
 
+// ---------------------------------------------------------------------------
+// GitHub Pages: what Jekyll publishes, and links that survive the build
+// ---------------------------------------------------------------------------
+
+const REPOSITORY = "https://github.com/kenwalger/cellar-api";
+const SITE_HOME = "docs/index.md";
+
+// The exclude list in _config.yml (a plain YAML list, read without a parser).
+const pagesExclude = (() => {
+  const lines = read(join(root, "_config.yml")).split("\n");
+  const start = lines.indexOf("exclude:");
+  const entries = [];
+  for (const line of lines.slice(start + 1)) {
+    const item = /^ {2}- "?([^"]+?)"?\s*$/.exec(line);
+    if (!item) {
+      break;
+    }
+    entries.push(item[1]);
+  }
+  return entries;
+})();
+
+// Whether Jekyll copies or renders this repository path into the site.
+function isPublished(relPath) {
+  if (relPath.split("/").some((part) => part.startsWith("_") || part.startsWith("."))) {
+    return false;
+  }
+  return !pagesExclude.some((entry) => relPath === entry || relPath.startsWith(`${entry}/`));
+}
+
+// The URL Jekyll gives a published Markdown page, without the base path.
+function pageUrl(relPath) {
+  if (relPath === SITE_HOME) {
+    return "/";
+  }
+  const index = /^(.*\/)?(README|index)\.md$/.exec(relPath);
+  return index ? `/${index[1] ?? ""}` : `/${relPath.replace(/\.md$/, ".html")}`;
+}
+
+// A link to a file in this repository on GitHub: the file and heading must exist.
+function checkGithubLink(path, target) {
+  const match = /^https:\/\/github\.com\/kenwalger\/cellar-api\/(blob|tree)\/main\/([^#]*)(?:#(.*))?$/.exec(target);
+  if (!match) {
+    return;
+  }
+  const [, kind, repoPath, anchor] = match;
+  const resolved = join(root, decodeURIComponent(repoPath));
+  if (!existsSync(resolved)) {
+    problems.push(`${rel(path)}: GitHub link to a missing path: ${target}`);
+  } else if ((kind === "tree") !== statSync(resolved).isDirectory()) {
+    problems.push(`${rel(path)}: GitHub link should use /${kind === "tree" ? "blob" : "tree"}/ for ${repoPath}`);
+  } else if (anchor && resolved.endsWith(".md") && !anchorsOf(resolved).has(anchor)) {
+    problems.push(`${rel(path)}: GitHub link to a missing heading: ${target}`);
+  }
+}
+
 function checkLinks(path) {
+  const published = labPages.includes(path);
   for (const match of withoutFences(read(path)).matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g)) {
     const target = match[1];
-    if (/^(https?:|mailto:)/.test(target)) {
+    if (/^https?:/.test(target)) {
+      checkGithubLink(path, target);
+      continue;
+    }
+    if (/^mailto:/.test(target)) {
       continue;
     }
     const [file, anchor] = target.split("#");
     const resolved = file === "" ? path : resolve(dirname(path), decodeURIComponent(file));
     if (!existsSync(resolved)) {
       problems.push(`${rel(path)}: link to a missing file: ${target}`);
-    } else if (anchor && resolved.endsWith(".md") && !anchorsOf(resolved).has(anchor)) {
+      continue;
+    }
+    if (anchor && resolved.endsWith(".md") && !anchorsOf(resolved).has(anchor)) {
       problems.push(`${rel(path)}: link to a missing heading: ${target}`);
     }
+    if (!published || file === "") {
+      continue;
+    }
+    // On the Pages site, a relative link must reach something Jekyll publishes.
+    const targetPath = rel(resolved);
+    const onGithub = `${REPOSITORY}/${statSync(resolved).isDirectory() ? "tree" : "blob"}/main/${targetPath}`;
+    if (!isPublished(targetPath)) {
+      problems.push(`${rel(path)}: ${target} isn't published on the Pages site. Link to ${onGithub} instead.`);
+    } else if (statSync(resolved).isDirectory()) {
+      problems.push(`${rel(path)}: ${target} is a folder. Link to a page in it, or to ${onGithub}.`);
+    } else if (rel(path) === SITE_HOME && !resolved.endsWith(".md")) {
+      // The home page is served at the site root, so a relative file path from it
+      // would resolve against the wrong folder. Only .md links are rewritten.
+      problems.push(`${rel(path)}: ${target} is relative to docs/, but this page is served at the site root.`);
+    }
+  }
+}
+
+// _data/lab.yml drives the site navigation. Every published page must be in it,
+// once, with the URL Jekyll gives it.
+function checkNavigation() {
+  const entries = [];
+  for (const line of read(join(root, "_data", "lab.yml")).split("\n")) {
+    const field = /^ {2}(- )?(title|path|url): "?(.*?)"?\s*$/.exec(line) ?? /^ {4}(path|url): "?(.*?)"?\s*$/.exec(line);
+    if (!field) {
+      continue;
+    }
+    const [name, value] = field.length === 4 ? [field[2], field[3]] : [field[1], field[2]];
+    if (name === "title") {
+      entries.push({});
+    }
+    entries.at(-1)[name] = value;
+  }
+  const listed = new Set();
+  for (const entry of entries) {
+    if (!entry.path || !existsSync(join(root, entry.path))) {
+      problems.push(`_data/lab.yml: "${entry.title}" points to a missing page: ${entry.path}`);
+      continue;
+    }
+    if (entry.url !== pageUrl(entry.path)) {
+      problems.push(`_data/lab.yml: "${entry.title}" has url ${entry.url}, but Jekyll publishes ${entry.path} at ${pageUrl(entry.path)}`);
+    }
+    if (listed.has(entry.path)) {
+      problems.push(`_data/lab.yml: ${entry.path} is listed twice`);
+    }
+    listed.add(entry.path);
+  }
+  for (const page of labPages.map(rel)) {
+    if (!listed.has(page)) {
+      problems.push(`_data/lab.yml: published page ${page} is missing from the lab navigation`);
+    }
+  }
+  const docsPages = markdownFiles(join(root, "docs")).map(rel).filter(isPublished);
+  for (const page of docsPages) {
+    if (!labPages.map(rel).includes(page)) {
+      problems.push(`${page}: published on the Pages site but not checked as a lab page`);
+    }
+  }
+  if (!/path: "docs\/index\.md"\n\s+values:\n\s+permalink: \//.test(read(join(root, "_config.yml")))) {
+    problems.push("_config.yml: docs/index.md must be published at permalink / (the site's entry point)");
   }
 }
 
@@ -407,6 +531,7 @@ refreshExamples();
 
 if (check) {
   linkedPages.forEach(checkLinks);
+  checkNavigation();
   labPages.forEach((path) => {
     checkCommands(path);
     checkMermaid(path);

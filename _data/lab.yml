@@ -1,0 +1,54 @@
+# Navigation for the published learning lab (used by _layouts/lab.html).
+#
+# sequence:  reading order, used for the contents list and previous/next links
+# reference: supporting pages, listed in the contents
+#
+# path is the source file. url is where Jekyll publishes it, without the
+# /cellar-api base path (the layout adds it with relative_url).
+# To add a page: add it here, then run node scripts/lab-docs.mjs --check,
+# which fails if a published page is missing from this file or a url is wrong.
+
+repository: https://github.com/kenwalger/cellar-api
+
+sequence:
+  - title: Lab home
+    path: docs/index.md
+    url: /
+  - title: Lab overview
+    path: docs/lab/README.md
+    url: /docs/lab/
+  - title: "0. Set up"
+    path: docs/lab/00-setup.md
+    url: /docs/lab/00-setup.html
+  - title: "1. Inspect the source"
+    path: docs/lab/01-inspect-the-source.md
+    url: /docs/lab/01-inspect-the-source.html
+  - title: "2. Parse and validate"
+    path: docs/lab/02-parse-and-validate.md
+    url: /docs/lab/02-parse-and-validate.html
+  - title: "3. Break the contract"
+    path: docs/lab/03-break-the-contract.md
+    url: /docs/lab/03-break-the-contract.html
+  - title: "4. Estimate production"
+    path: docs/lab/04-estimate-production.md
+    url: /docs/lab/04-estimate-production.html
+  - title: "5. Provenance and regeneration"
+    path: docs/lab/05-provenance-and-regeneration.md
+    url: /docs/lab/05-provenance-and-regeneration.html
+  - title: "6. Optional: Google Docs extension"
+    path: docs/lab/06-google-docs-extension.md
+    url: /docs/lab/06-google-docs-extension.html
+
+reference:
+  - title: Troubleshooting
+    path: docs/lab/troubleshooting.md
+    url: /docs/lab/troubleshooting.html
+  - title: Evidence capture guide
+    path: docs/lab/evidence/README.md
+    url: /docs/lab/evidence/
+  - title: Maintainer and instructor guide
+    path: docs/lab/maintainers.md
+    url: /docs/lab/maintainers.html
+  - title: Example files
+    path: docs/lab/examples/README.md
+    url: /docs/lab/examples/

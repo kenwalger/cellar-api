@@ -18,7 +18,7 @@ If each role had its own script, every wording change would have to be made thre
 
 ## Steps
 
-1. **Open the script.** Open [`course/master-script.md`](../../course/master-script.md) in your editor. Despite the `.md` extension, it's plain text: structure comes only from literal lines, never from Markdown formatting. The grammar is in [`course/README.md`](../../course/README.md#script-grammar).
+1. **Open the script.** Open [`course/master-script.md`](https://github.com/kenwalger/cellar-api/blob/main/course/master-script.md) in your editor. Despite the `.md` extension, it's plain text: structure comes only from literal lines, never from Markdown formatting. The grammar is in [`course/README.md`](https://github.com/kenwalger/cellar-api/blob/main/course/README.md#script-grammar).
 
 2. **Find the headings.** Line 1 is the course title. Then list the stage and video headings:
 
@@ -92,7 +92,7 @@ If each role had its own script, every wording change would have to be made thre
 
    *Expected:* 12 `ACTION`, 31 `VOICEOVER`, and 6 `PAUSE`. (`VISUAL` is 11 and `HIGHLIGHT` is 13.) You'll get the same numbers from the parser in Exercise 2, by a completely different route.
 
-6. **Find the repeated section.** Go to `Video 2: Handling Errors` (line 251). Its sections are ONSET, MOTION, SCREENCAST, and then **ONSET again** (line 381). A video can repeat a role, and order matters: the presenter introduces the topic, the animation and screen recording follow, and the presenter wraps up. Check that the same sequence is listed for this video in [`course/fixtures/expected-structure.json`](../../course/fixtures/expected-structure.json), an outline written by hand *before* the script.
+6. **Find the repeated section.** Go to `Video 2: Handling Errors` (line 251). Its sections are ONSET, MOTION, SCREENCAST, and then **ONSET again** (line 381). A video can repeat a role, and order matters: the presenter introduces the topic, the animation and screen recording follow, and the presenter wraps up. Check that the same sequence is listed for this video in [`course/fixtures/expected-structure.json`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/expected-structure.json), an outline written by hand *before* the script.
 
 ## Expected results
 

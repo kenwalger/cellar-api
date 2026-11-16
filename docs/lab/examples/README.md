@@ -17,4 +17,4 @@ Files used by the [learning lab](../README.md). **None of them came from a live 
 
 `node scripts/lab-docs.mjs --check` (run in CI) regenerates them and fails if the committed files differ. It also checks the claims that [Exercise 5](../05-provenance-and-regeneration.md) makes about them, such as the same source hash in both runs and different durations.
 
-These files are teaching material, not test oracles. The independent oracles are in [`course/fixtures/`](../../../course/fixtures/README.md).
+These files are teaching material, not test oracles. The independent oracles are in [`course/fixtures/`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/README.md).

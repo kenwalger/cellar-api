@@ -16,7 +16,7 @@ You don't need a Google account for this exercise. [`docs/lab/examples/`](exampl
 
 ## Steps
 
-1. **Read a manifest.** Open [`examples/example-manifest-run-1.json`](examples/example-manifest-run-1.json). The fields follow manifest schema version 2, documented in [`apps-script/README.md`](../../apps-script/README.md#manifest):
+1. **Read a manifest.** Open [`examples/example-manifest-run-1.json`](examples/example-manifest-run-1.json). The fields follow manifest schema version 2, documented in [`apps-script/README.md`](https://github.com/kenwalger/cellar-api/blob/main/apps-script/README.md#manifest):
 
    | Field | What it records | What it lets you establish |
    |---|---|---|

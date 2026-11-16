@@ -8,7 +8,7 @@
 
 ## Steps
 
-1. **Run the parser on deliberately broken scripts.** [`course/fixtures/malformed-script.md`](../../course/fixtures/malformed-script.md) holds four tiny scripts, each with one defect. Run the outline on the whole file:
+1. **Run the parser on deliberately broken scripts.** [`course/fixtures/malformed-script.md`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/malformed-script.md) holds four tiny scripts, each with one defect. Run the outline on the whole file:
 
    <!-- lab-output cwd="parser" exit="1" -->
    ```bash
@@ -52,7 +52,7 @@
    | 3 | `[MOTION]` opens inside an open `[ONSET]` | `NESTED_SECTION` |
    | 4 | `[NARRATION]` isn't a known annotation | `UNKNOWN_ANNOTATION` |
 
-   The other errors are **follow-on errors**. After a nested tag, for example, the parser keeps reading lines as part of the outer ONSET section, so `[VISUAL]` and `[VOICEOVER]` are reported as not allowed there. The `=== Case N ===` delimiter lines belong to the fixture file, not the grammar, which is why lines 33 and 57 are reported as text outside a section. The tests split the file and check each case's *first* error (see [`course/fixtures/README.md`](../../course/fixtures/README.md)). All codes are listed in [`parser/README.md`](../../parser/README.md#diagnostics).
+   The other errors are **follow-on errors**. After a nested tag, for example, the parser keeps reading lines as part of the outer ONSET section, so `[VISUAL]` and `[VOICEOVER]` are reported as not allowed there. The `=== Case N ===` delimiter lines belong to the fixture file, not the grammar, which is why lines 33 and 57 are reported as text outside a section. The tests split the file and check each case's *first* error (see [`course/fixtures/README.md`](https://github.com/kenwalger/cellar-api/blob/main/course/fixtures/README.md)). All codes are listed in [`parser/README.md`](https://github.com/kenwalger/cellar-api/blob/main/parser/README.md#diagnostics).
 
 2. **Make your own broken copy.**
 

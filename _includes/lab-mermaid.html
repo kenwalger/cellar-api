@@ -1,0 +1,37 @@
+<script type="module">
+  // Draws the page's Mermaid code blocks (included only on pages that have one).
+  // GitHub Pages' Rouge renders ```mermaid as a plain code block. If this script
+  // can't run, or the CDN is unreachable, that code block stays visible as the
+  // readable fallback. Mermaid is loaded and initialized once per page.
+  const blocks = document.querySelectorAll("div.language-mermaid");
+  if (blocks.length > 0) {
+    try {
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      const diagrams = [];
+      for (const block of blocks) {
+        const diagram = document.createElement("pre");
+        diagram.className = "mermaid";
+        diagram.textContent = block.querySelector("code").textContent;
+        diagrams.push({ block, diagram });
+      }
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#fff6e9",
+          primaryBorderColor: "#7c334f",
+          primaryTextColor: "#544943",
+          lineColor: "#7c334f",
+          fontFamily: "'Open Sans', Myriad, Calibri, sans-serif",
+        },
+      });
+      for (const { block, diagram } of diagrams) {
+        block.replaceWith(diagram);
+      }
+      await mermaid.run({ nodes: diagrams.map(({ diagram }) => diagram) });
+    } catch (error) {
+      console.warn("Mermaid diagram not rendered; showing its source instead.", error);
+    }
+  }
+</script>

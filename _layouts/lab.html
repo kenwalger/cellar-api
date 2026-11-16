@@ -1,0 +1,58 @@
+---
+layout: default
+---
+{%- comment -%}
+  Merlot's default layout plus learning-lab navigation. The page list lives in
+  _data/lab.yml. Every link goes through relative_url, so it keeps the
+  /cellar-api base path.
+{%- endcomment -%}
+{%- assign lab = site.data.lab -%}
+{%- assign position = nil -%}
+{%- for item in lab.sequence -%}
+  {%- if item.path == page.path -%}{%- assign position = forloop.index0 -%}{%- endif -%}
+{%- endfor -%}
+<nav class="lab-nav" aria-label="Learning lab">
+  <p>
+    <a href="{{ '/' | relative_url }}">Lab home</a>
+    <span aria-hidden="true">·</span>
+    <a href="{{ '/docs/lab/' | relative_url }}">Lab overview</a>
+    <span aria-hidden="true">·</span>
+    <a href="{{ lab.repository }}">Source on GitHub</a>
+  </p>
+  <details>
+    <summary>All lab pages</summary>
+    <ol class="lab-sequence">
+      {%- for item in lab.sequence %}
+      <li><a href="{{ item.url | relative_url }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+      {%- endfor %}
+    </ol>
+    <ul class="lab-reference">
+      {%- for item in lab.reference %}
+      <li><a href="{{ item.url | relative_url }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+      {%- endfor %}
+      <li><a href="{{ lab.repository }}">Source repository</a></li>
+    </ul>
+  </details>
+</nav>
+
+{{ content }}
+
+<nav class="lab-pager" aria-label="Previous and next page">
+{%- if position != nil -%}
+  {%- assign previous_index = position | minus: 1 -%}
+  {%- assign next_index = position | plus: 1 -%}
+  {%- if position > 0 -%}
+    {%- assign previous = lab.sequence[previous_index] -%}
+    <a class="lab-previous" href="{{ previous.url | relative_url }}" rel="prev">← {{ previous.title }}</a>
+  {%- endif -%}
+  {%- if next_index < lab.sequence.size -%}
+    {%- assign next = lab.sequence[next_index] -%}
+    <a class="lab-next" href="{{ next.url | relative_url }}" rel="next">{{ next.title }} →</a>
+  {%- endif -%}
+{%- else -%}
+  <a class="lab-previous" href="{{ '/docs/lab/' | relative_url }}">← Lab overview</a>
+{%- endif -%}
+</nav>
+{%- if content contains "language-mermaid" %}
+{% include lab-mermaid.html %}
+{%- endif %}

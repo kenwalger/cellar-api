@@ -35,7 +35,7 @@
    mkdir -p lab-work
    ```
 
-5. *Optional:* to run the fictional winery API that the course teaches, install [uv](https://docs.astral.sh/uv/) and follow [Running the API](../../README.md#running-the-api). The lab doesn't need it.
+5. *Optional:* to run the fictional winery API that the course teaches, install [uv](https://docs.astral.sh/uv/) and follow [Running the API](https://github.com/kenwalger/cellar-api/blob/main/README.md#running-the-api). The lab doesn't need it.
 
 ## Reflection
 
