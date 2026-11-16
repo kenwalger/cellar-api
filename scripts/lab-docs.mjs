@@ -462,6 +462,32 @@ function checkCommands(path) {
   }
 }
 
+// The Pages site draws Mermaid with _includes/lab-mermaid.html. GitHub Pages
+// emits a ```mermaid fence as <pre><code class="language-mermaid"> (Rouge has
+// no Mermaid lexer, as seen on the live site), or as Rouge's wrapped
+// <div class="language-mermaid ..."> form. The loader must find both, and it
+// must be included on pages that have a diagram.
+function checkMermaidLoader() {
+  if (!labPages.some((path) => /^\s*```mermaid$/m.test(read(path)))) {
+    return;
+  }
+  const layout = read(join(root, "_layouts", "lab.html"));
+  const loader = read(join(root, "_includes", "lab-mermaid.html"));
+  if (!/\{%-?\s*if content contains "language-mermaid"\s*-?%\}\s*\{%-?\s*include lab-mermaid\.html\s*-?%\}/.test(layout)) {
+    problems.push('_layouts/lab.html: must include lab-mermaid.html when the content contains "language-mermaid"');
+  }
+  for (const selector of ["code.language-mermaid", "div.language-mermaid code"]) {
+    if (!loader.includes(selector)) {
+      problems.push(`_includes/lab-mermaid.html: must select "${selector}", one of the shapes GitHub Pages emits for a mermaid block`);
+    }
+  }
+  for (const call of ["import(", "mermaid.initialize("]) {
+    if (loader.split(call).length !== 2) {
+      problems.push(`_includes/lab-mermaid.html: ${call} must appear exactly once (load and initialize Mermaid once)`);
+    }
+  }
+}
+
 function checkMermaid(path) {
   for (const fence of read(path).matchAll(/^```mermaid\n([\s\S]*?)^```/gm)) {
     const body = fence[1].split("\n").filter((line) => line.trim() !== "" && !line.trim().startsWith("%%"));
@@ -532,6 +558,7 @@ refreshExamples();
 if (check) {
   linkedPages.forEach(checkLinks);
   checkNavigation();
+  checkMermaidLoader();
   labPages.forEach((path) => {
     checkCommands(path);
     checkMermaid(path);

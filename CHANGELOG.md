@@ -104,3 +104,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `.editorconfig` uses two-space indentation for JavaScript.
 - `README.md`, `CLAUDE.md`, `docs/architecture.md`, `docs/roadmap.md`, and `docs/learning-lab.md` updated for Phase 3A. They describe the implemented parser, the JavaScript conventions, and a planned parser exercise. Phase 3B and Phase 4 remain planned.
 - `docs/architecture.md`, `docs/roadmap.md`, `docs/learning-lab.md`, and `README.md` updated for Phase 2. They now describe the master script as the authoritative source, mark Phase 2 complete, and outline a planned Exercise 3.
+
+### Fixed
+
+- The Mermaid architecture diagram on the GitHub Pages home page showed as source code. GitHub Pages emits a `mermaid` fence as a bare `<pre><code class="language-mermaid">` because Rouge has no Mermaid lexer, but the loader only looked for Rouge's wrapped `div.language-mermaid` form. So it found nothing and never loaded Mermaid. `_includes/lab-mermaid.html` now handles both shapes. It renders each diagram before replacing its source, so a failed render or an unreachable CDN leaves the source visible. `scripts/lab-docs.mjs --check` now checks that the layout includes the loader and that the loader supports both shapes and loads and initializes Mermaid once.

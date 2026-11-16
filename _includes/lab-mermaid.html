@@ -1,19 +1,15 @@
 <script type="module">
   // Draws the page's Mermaid code blocks (included only on pages that have one).
-  // GitHub Pages' Rouge renders ```mermaid as a plain code block. If this script
-  // can't run, or the CDN is unreachable, that code block stays visible as the
-  // readable fallback. Mermaid is loaded and initialized once per page.
-  const blocks = document.querySelectorAll("div.language-mermaid");
-  if (blocks.length > 0) {
+  // GitHub Pages emits a fenced ```mermaid block in one of two shapes:
+  //   <pre><code class="language-mermaid">…</code></pre>   (Rouge has no Mermaid lexer; seen on the live site)
+  //   <div class="language-mermaid highlighter-rouge"><div class="highlight"><pre class="highlight"><code>…
+  // Both are handled. Each diagram is rendered first and swapped in only on
+  // success, so if this script, the CDN, or a diagram fails, the source stays
+  // visible as the readable fallback. Mermaid is loaded and initialized once.
+  const sources = document.querySelectorAll("code.language-mermaid, div.language-mermaid code");
+  if (sources.length > 0) {
     try {
       const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
-      const diagrams = [];
-      for (const block of blocks) {
-        const diagram = document.createElement("pre");
-        diagram.className = "mermaid";
-        diagram.textContent = block.querySelector("code").textContent;
-        diagrams.push({ block, diagram });
-      }
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "strict",
@@ -26,12 +22,21 @@
           fontFamily: "'Open Sans', Myriad, Calibri, sans-serif",
         },
       });
-      for (const { block, diagram } of diagrams) {
-        block.replaceWith(diagram);
+      let index = 0;
+      for (const code of sources) {
+        const block = code.closest("div.language-mermaid") || code.closest("pre") || code;
+        try {
+          const { svg } = await mermaid.render(`lab-mermaid-${index++}`, code.textContent);
+          const diagram = document.createElement("div");
+          diagram.className = "mermaid";
+          diagram.innerHTML = svg;
+          block.replaceWith(diagram);
+        } catch (error) {
+          console.warn("Mermaid diagram not rendered; showing its source instead.", error);
+        }
       }
-      await mermaid.run({ nodes: diagrams.map(({ diagram }) => diagram) });
     } catch (error) {
-      console.warn("Mermaid diagram not rendered; showing its source instead.", error);
+      console.warn("Mermaid couldn't be loaded; showing diagram source instead.", error);
     }
   }
 </script>
