@@ -12,9 +12,12 @@ parser/
 ├── src/
 │   ├── production-script.cjs  portable core: parser, document checks, diagnostics
 │   ├── index.js               ESM entry point for Node.js
-│   └── print-ir.js            prints the parse result for a file as JSON
+│   ├── print-ir.js            prints the parse result for a file as JSON
+│   ├── outline.js             formats a parse result as a short text outline (Node-only)
+│   └── print-outline.js       prints that outline for a file
 └── tests/
     ├── fixtures.test.js       master script and malformed-case acceptance tests
+    ├── outline.test.js        the outline matches the expected structure and lists diagnostics
     ├── parser.test.js         IR shape and grammar edge cases
     ├── validator.test.js      diagnostic codes, lines, ordering, recovery
     ├── portability.test.js    the core runs with no module system
@@ -31,9 +34,10 @@ Requires Node.js 22 or newer. There's nothing to install.
 cd parser
 npm test                                          # run all parser tests
 npm run print-ir -- ../course/master-script.md    # print the IR and diagnostics as JSON
+npm run print-outline -- ../course/master-script.md   # print a short outline and the diagnostics
 ```
 
-`print-ir` exits with status 1 if the script has any error diagnostics.
+Both exit with status 1 if the script has any error diagnostics. `print-outline` lists each stage, video, and section in order, with source lines and annotation counts, then the totals and every diagnostic. It's a Node-only reading aid (`src/outline.js`) used by the [learning lab](../docs/lab/README.md). It only summarizes the parse result and isn't part of the portable core.
 
 ## Public API
 

@@ -54,3 +54,6 @@ jobs:
 
       - name: Check Apps Script copies (parser and estimator) match their sources
         run: node scripts/sync-apps-script.mjs --check
+
+      - name: Check the learning lab's documented outputs, examples, and links
+        run: node scripts/lab-docs.mjs --check

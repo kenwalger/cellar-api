@@ -376,7 +376,7 @@ Everything that can be checked is checked before the first write: configuration 
 
 ## Live verification checklist
 
-These steps need a person with a Google account. Record the results (and screenshots, per [`docs/learning-lab.md`](../docs/learning-lab.md)) in the repository.
+These steps need a person with a Google account. Record the results (and screenshots, per the [evidence guide](../docs/lab/evidence/README.md)) in the repository. The [learning lab's Exercise 6](../docs/lab/06-google-docs-extension.md) walks a newcomer through the same workflow.
 
 ### Phase 3B: three role documents and the manifest
 
@@ -427,7 +427,7 @@ Phase 4b changes how SCREENCAST technical examples and `[PAUSE]` cues are render
 9. **Narration totals.** *Expected:* the course overview shows `Spoken words: 1978` and `Estimated total: 14 min 8 s`, down from 1,980 and 14 min 9 s in run `6146a211`.
 10. **Provenance.** *Expected:* `manifest.json` has `"schemaVersion": 2`, `source.documentTitle` with the corrected title, and a new `source.extractedTextSha256`. The `parser.coreSha256` and `estimator.coreSha256` values match `GeneratedData.js`, and there are four `output.documents`. Run `6146a211`'s folder and documents are still present and unchanged.
 
-Record the results, and the screenshots listed in [`docs/learning-lab.md`](../docs/learning-lab.md), before calling Phase 4b verified.
+Record the results, and the screenshots listed in the [evidence guide](../docs/lab/evidence/README.md), before calling Phase 4b verified.
 
 ## Limitations
 

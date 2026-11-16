@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 2,
+  "status": "complete",
+  "runId": "example1",
+  "generatedAt": "2026-01-15T10:00:00.000Z",
+  "source": {
+    "documentId": "example-source-document-id",
+    "documentUrl": "https://docs.test/example-source-document-id",
+    "documentTitle": "Digital Cellar - Master Production Script",
+    "lastUpdated": "2026-01-15T09:30:00.000Z",
+    "extractedTextSha256": "bd8dfd4e8366f0b42b1ecaf381a9b5d44cee7412673aedeaf01108e366fa2c8a",
+    "extractedLineCount": 410
+  },
+  "parser": {
+    "version": "0.1.0",
+    "coreSha256": "b5c678e69a36b1fd655d61b454eea156b37b78d839ec1342d34c27dab61ec8fc"
+  },
+  "estimator": {
+    "schemaVersion": 1,
+    "version": "0.1.0",
+    "coreSha256": "00343c8a147b1792db7b840a80b91ce25fe194aa8a7ab0d382b38506770e08bd",
+    "config": {
+      "wordsPerMinute": 140,
+      "longVideoThresholdMinutes": 3,
+      "screencastAllowanceSecondsPerSection": 0
+    }
+  },
+  "output": {
+    "folderId": "folder-1",
+    "folderUrl": "https://drive.test/folder-1",
+    "folderName": "Digital Cellar Production — 2026-01-15 100000 UTC — example1",
+    "documents": [
+      {
+        "role": "ONSET",
+        "id": "doc-2",
+        "title": "ONSET — Understanding APIs: A Winery's Digital Cellar — example1",
+        "url": "https://docs.test/doc-2",
+        "status": "complete"
+      },
+      {
+        "role": "MOTION",
+        "id": "doc-3",
+        "title": "MOTION — Understanding APIs: A Winery's Digital Cellar — example1",
+        "url": "https://docs.test/doc-3",
+        "status": "complete"
+      },
+      {
+        "role": "SCREENCAST",
+        "id": "doc-4",
+        "title": "SCREENCAST — Understanding APIs: A Winery's Digital Cellar — example1",
+        "url": "https://docs.test/doc-4",
+        "status": "complete"
+      },
+      {
+        "role": "PRODUCTION_SUMMARY",
+        "id": "doc-5",
+        "title": "Production Summary — Understanding APIs: A Winery's Digital Cellar — example1",
+        "url": "https://docs.test/doc-5",
+        "status": "complete"
+      }
+    ]
+  },
+  "counts": {
+    "stages": 2,
+    "videos": 6,
+    "sections": {
+      "ONSET": 6,
+      "MOTION": 3,
+      "SCREENCAST": 4,
+      "total": 13
+    }
+  },
+  "structureCheck": {
+    "checked": true,
+    "matches": true
+  },
+  "warnings": [],
+  "estimate": {
+    "totals": {
+      "stageCount": 2,
+      "videoCount": 6,
+      "sectionCounts": {
+        "ONSET": 6,
+        "MOTION": 3,
+        "SCREENCAST": 4
+      },
+      "spokenWordCount": 1978,
+      "technicalTokenCount": 7,
+      "narrationDurationSeconds": 847.7142857142857,
+      "screencastAllowanceSeconds": 0,
+      "estimatedDurationSeconds": 847.7142857142857,
+      "videosOverThreshold": 1
+    },
+    "videos": [
+      {
+        "stageNumber": 1,
+        "videoNumber": 1,
+        "title": "What Is an API?",
+        "spokenWordCount": 273,
+        "technicalTokenCount": 0,
+        "narrationDurationSeconds": 117,
+        "screencastAllowanceSeconds": 0,
+        "estimatedDurationSeconds": 117
+      },
+      {
+        "stageNumber": 1,
+        "videoNumber": 2,
+        "title": "Requests and Responses",
+        "spokenWordCount": 287,
+        "technicalTokenCount": 1,
+        "narrationDurationSeconds": 123,
+        "screencastAllowanceSeconds": 0,
+        "estimatedDurationSeconds": 123
+      },
+      {
+        "stageNumber": 1,
+        "videoNumber": 3,
+        "title": "Understanding JSON",
+        "spokenWordCount": 246,
+        "technicalTokenCount": 2,
+        "narrationDurationSeconds": 105.42857142857143,
+        "screencastAllowanceSeconds": 0,
+        "estimatedDurationSeconds": 105.42857142857143
+      },
+      {
+        "stageNumber": 2,
+        "videoNumber": 1,
+        "title": "Making API Requests",
+        "spokenWordCount": 280,
+        "technicalTokenCount": 1,
+        "narrationDurationSeconds": 120,
+        "screencastAllowanceSeconds": 0,
+        "estimatedDurationSeconds": 120
+      },
+      {
+        "stageNumber": 2,
+        "videoNumber": 2,
+        "title": "Handling Errors",
+        "spokenWordCount": 664,
+        "technicalTokenCount": 0,
+        "narrationDurationSeconds": 284.57142857142856,
+        "screencastAllowanceSeconds": 0,
+        "estimatedDurationSeconds": 284.57142857142856
+      },
+      {
+        "stageNumber": 2,
+        "videoNumber": 3,
+        "title": "Wrapping Up",
+        "spokenWordCount": 228,
+        "technicalTokenCount": 3,
+        "narrationDurationSeconds": 97.71428571428571,
+        "screencastAllowanceSeconds": 0,
+        "estimatedDurationSeconds": 97.71428571428571
+      }
+    ],
+    "warnings": [
+      {
+        "code": "LONG_VIDEO_ESTIMATE",
+        "stageNumber": 2,
+        "videoNumber": 2,
+        "title": "Handling Errors",
+        "estimatedDurationSeconds": 284.57142857142856,
+        "thresholdSeconds": 180,
+        "includesScreencastAllowance": false
+      }
+    ]
+  },
+  "error": null
+}
+

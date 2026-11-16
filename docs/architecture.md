@@ -8,7 +8,7 @@ This document has five parts:
 4. The **implemented** portable production estimator (Phase 4).
 5. The **implemented** Google Docs integration: ONSET, MOTION, and SCREENCAST generation (Phase 3B) and the Production Summary (Phase 4).
 
-All implemented code is tested offline. The project owner reported successful live Google Docs runs of Phases 3B and 4. The Phase 4b rendering cleanup hasn't been run in a real Google account yet. That's a manual checkpoint, described in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist).
+All implemented code is tested offline. The project owner reported successful live Google Docs runs of Phases 3B and 4. The Phase 4b rendering cleanup hasn't been run in a real Google account yet. That's a manual checkpoint, described in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist). The [learning lab](lab/README.md) (Phase 5) teaches this architecture with the real artifacts. It adds no application behavior, only a Node-only outline command for the parser and a checker that keeps the lab in step with the code (see [Teaching the system](#teaching-the-system-phase-5)).
 
 ## Part 1: Implemented API
 
@@ -192,3 +192,10 @@ flowchart TD
 - **One direction only.** Changes go into the master Google Doc. Generated documents are derivative outputs and are never edited to change the course.
 - **No synchronization.** Generated documents aren't kept in sync with the master. If the master changes after generation, the existing outputs stay as they were.
 - **Regeneration creates a new set.** Running the generator again produces a new, identifiable set of four documents with its own generation manifest. It doesn't update the previous set in place, so you can always tell which version of the master a set came from. To compare assumptions, change an estimator setting and generate again. The source script doesn't change.
+
+## Teaching the system (Phase 5)
+
+The [learning lab](lab/README.md) uses the components above as they are. Two small Node-only additions support it, and neither runs in Apps Script or changes any output:
+
+- **`parser/src/outline.js`** (`npm run print-outline`) formats a parse result as a short text outline: stages, videos, and sections with source lines and annotation counts, then the diagnostics. It only reads the IR and diagnostics the parser returned.
+- **`scripts/lab-docs.mjs`** runs the documented commands, recalculates the estimate tables, and rebuilds the lab's example manifests through the real `Generator` and `Manifest` with the adapter's test doubles. With `--check` (in CI), it also verifies links, commands, Mermaid blocks, and the absence of private identifiers. This makes the lab's figures follow the code instead of being copied by hand, while the independent oracles in `course/fixtures/` stay hand-written.

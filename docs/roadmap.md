@@ -1,6 +1,6 @@
 # Roadmap
 
-Four milestones. Each phase builds on the previous one. Phases 1, 2, 3A, 3B, and 4 are implemented in the repository. The project owner reported successful live Google Docs runs of Phases 3B and 4. The Phase 4b cleanup still needs a person to run it against a live Google account. The learning-lab walkthrough and screenshots are still to come.
+Five milestones. Each phase builds on the previous one. Phases 1, 2, 3A, 3B, 4, and 5 are implemented in the repository. The project owner reported successful live Google Docs runs of Phases 3B and 4. The Phase 4b cleanup still needs a person to run it against a live Google account. The Phase 5 learning lab is written and checked in CI. Its screenshots are still to come.
 
 ## Phase 1: Repository and API ✅
 
@@ -73,6 +73,13 @@ A narrowly scoped cleanup based on the live run's documents. There's no new phas
 - **Master script:** the 400s and 500s sentences in Stage 2, Video 2 are more precise. That video goes from 666 to 664 spoken words, and the course from 1,980 to 1,978 (14 min 9 s to 14 min 8 s). Structure is unchanged (2 stages, 6 videos, 13 sections), and Stage 2, Video 2 is still the only long video.
 - **Live (not done yet):** rename the master Google Doc (its title has a typo), apply the narration edit there, and run the [Phase 4b checklist](../apps-script/README.md#phase-4b-cleanup-and-final-acceptance).
 
-## Still to come: learning lab
+## Phase 5: Developer learning lab ✅ (screenshots pending)
 
-- Add screenshots (`docs/screenshots/`), step-by-step instructions, and a reproducible learning lab. See [learning-lab.md](learning-lab.md). The Production Summary exercises (6 and 7) are outlined there.
+A guided, local-first lab in [`docs/lab/`](lab/README.md) that teaches the existing system. It adds no application features.
+
+- Five core exercises (about 57 minutes, no Google account): inspect the source, parse and validate, break the contract, estimate production, and provenance and regeneration. There's one optional Google Docs exercise.
+- A GitHub Pages-ready landing page ([`docs/index.md`](index.md)) with a Mermaid architecture diagram. Nothing has been deployed.
+- An evidence and screenshot guide, a troubleshooting page, and a maintainer and instructor guide with a 60-minute workshop plan.
+- Instructional example manifests produced offline by the real generator code with test doubles, clearly labeled as not from a live run.
+- A learner-facing outline command for the parser (`npm run print-outline`), and `node scripts/lab-docs.mjs --check` in CI, which keeps the documented outputs, estimate tables, example manifests, links, and commands in step with the code.
+- **Not done:** no screenshots have been captured yet (see the [evidence inventory](lab/evidence/README.md#inventory)), and the Phase 4b live checkpoint is still open.

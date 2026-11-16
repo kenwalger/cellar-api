@@ -22,3 +22,6 @@ apps-script/.clasp.json
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Learning lab scratch folder (docs/lab/)
+lab-work/

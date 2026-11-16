@@ -18,9 +18,9 @@ The fictional course is *Understanding APIs: A Winery's Digital Cellar*. The Fas
 | 3B | Google Apps Script adapter, ONSET/MOTION/SCREENCAST generation, manifest (`apps-script/`) | **Implemented and tested offline.** The project owner reported a successful live Google Docs run. Item-by-item checklist results aren't recorded. |
 | 4 | Portable production estimator (`production/`), Production Summary doc, manifest schema 2 | **Implemented and tested offline.** The project owner reported a successful live run (run `6146a211`, November 16, 2026). |
 | 4b | Cleanup: SCREENCAST example styling, compact PAUSE cues, Production Summary overview table and wording, revised status-code narration | **Implemented and tested offline.** Live Google checkpoint **not yet done**. |
-| — | Learning-lab walkthrough and screenshots | Planned |
+| 5 | Developer learning lab (`docs/lab/`), GitHub Pages-ready landing page (`docs/index.md`), evidence guide, `print-outline`, lab checks (`scripts/lab-docs.mjs`) | **Implemented and checked in CI.** Screenshots **not yet captured**. Pages **not deployed**. |
 
-`docs/screenshots/` contains a placeholder only. Never claim that the Phase 4b changes work in Google until a person has completed the Phase 4b live checklist in `apps-script/README.md`. Don't invent details of the owner-reported Phase 3B and Phase 4 live runs. The repository's `course/master-script.md` and the live master Google Doc are separate copies. A script edit reaches generated documents only after the owner applies it to the Google Doc and generates again. `course/` holds the master script and parser fixtures. Its grammar is defined in `course/README.md`. If the API's behavior changes, recheck the script's examples against it. Don't regenerate `course/fixtures/expected-structure.json` from the script, because it's an independent oracle. Don't describe planned work as done, and don't claim an unimplemented feature works.
+`docs/screenshots/` contains a placeholder only. Never add a fabricated or mocked-up screenshot, and keep the evidence inventory in `docs/lab/evidence/README.md` truthful. The example manifests in `docs/lab/examples/` are instructional: produced offline by the real generator with test doubles, and never to be presented as a live run. Never claim that the Phase 4b changes work in Google until a person has completed the Phase 4b live checklist in `apps-script/README.md`. Don't invent details of the owner-reported Phase 3B and Phase 4 live runs. The repository's `course/master-script.md` and the live master Google Doc are separate copies. A script edit reaches generated documents only after the owner applies it to the Google Doc and generates again. `course/` holds the master script and parser fixtures. Its grammar is defined in `course/README.md`. If the API's behavior changes, recheck the script's examples against it. Don't regenerate `course/fixtures/expected-structure.json` from the script, because it's an independent oracle. Don't describe planned work as done, and don't claim an unimplemented feature works.
 
 ## Commands
 
@@ -34,11 +34,14 @@ uv run ruff format .                   # apply formatting
 
 cd parser && npm test                  # parser tests (Node.js 22+, no npm install needed)
 cd parser && npm run print-ir -- ../course/master-script.md   # print IR + diagnostics as JSON
+cd parser && npm run print-outline -- ../course/master-script.md   # print a short outline + diagnostics
 cd production && npm test              # estimator tests (Node.js 22+, no npm install needed)
 cd production && npm run print-estimate -- ../course/master-script.md   # print the estimate as JSON
 cd apps-script && npm test            # Apps Script adapter tests (offline, test doubles)
 node scripts/sync-apps-script.mjs     # regenerate apps-script/ProductionScript.js, ProductionEstimator.js, GeneratedData.js
 node scripts/sync-apps-script.mjs --check   # drift check (CI)
+node scripts/lab-docs.mjs             # refresh the lab's documented outputs, estimate tables, and example manifests
+node scripts/lab-docs.mjs --check     # verify them, plus lab links, commands, Mermaid, and private identifiers (CI)
 ```
 
 ## Repository layout
@@ -60,6 +63,7 @@ parser/
   src/production-script.cjs  Portable core: parser, document checks, diagnostics (one global)
   src/index.js               ESM wrapper for Node.js
   src/print-ir.js            Prints parse result for a file
+  src/outline.js, src/print-outline.js   Node-only text outline of a parse result (learning lab)
   tests/                     node:test suites (fixtures, parser, validator, portability)
 production/
   src/production-estimator.cjs  Portable core: word count, config checks, estimate, display (one global)
@@ -78,7 +82,11 @@ apps-script/
   tests/                     node:test suites with Body and Drive test doubles
 scripts/
   sync-apps-script.mjs       Generates and drift-checks the three generated files
-docs/              architecture.md, roadmap.md, learning-lab.md, screenshots/
+  lab-docs.mjs               Refreshes and checks the learning lab against the code
+docs/
+  index.md                   Learning-lab landing page (GitHub Pages-ready, not deployed)
+  lab/                       Exercises 00-06, troubleshooting, maintainers guide, evidence/, examples/
+  architecture.md, roadmap.md, learning-lab.md (pointer to lab/), screenshots/
 .github/           CI workflow, issue and PR templates
 ```
 
@@ -161,7 +169,7 @@ Don't start a later phase's work unless asked.
 - Tests must not need a running server, network access, or a database.
 - Test data-layer behavior in `test_repository.py` and HTTP behavior in `test_api.py`.
 - Parser tests go in `parser/tests/`, estimator tests in `production/tests/`, and adapter tests in `apps-script/tests/`. Acceptance tests must use `course/fixtures/` as the oracle. Never regenerate a fixture from parser or estimator output.
-- Run `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`, `npm test` in `parser/`, `production/`, and `apps-script/`, and `node scripts/sync-apps-script.mjs --check` before you report work as done.
+- Run `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`, `npm test` in `parser/`, `production/`, and `apps-script/`, `node scripts/sync-apps-script.mjs --check`, and `node scripts/lab-docs.mjs --check` before you report work as done. If a parser, estimator, generator, or script change moves the lab's outputs, run `node scripts/lab-docs.mjs`, review the diff, and update figures quoted in the lab's prose (see `docs/lab/maintainers.md`).
 - Keep offline verification separate from live Google verification. Report the live checkpoint as not done unless a person has confirmed it.
 - **Never invent or paraphrase test results.** Report only what you actually ran, including failures. If you skipped a check, say so.
 
@@ -173,7 +181,7 @@ Don't start a later phase's work unless asked.
 
 ## Documentation maintenance
 
-When behavior changes, update in the same change: `README.md` (endpoints, examples), this file (status, layout), `docs/architecture.md`, and `CHANGELOG.md` (Unreleased). Example responses in the README must match real API output.
+When behavior changes, update in the same change: `README.md` (endpoints, examples), this file (status, layout), `docs/architecture.md`, and `CHANGELOG.md` (Unreleased). Example responses in the README must match real API output. If the change affects anything the learning lab shows, also update `docs/lab/` and keep `node scripts/lab-docs.mjs --check` passing.
 
 ## Document automation architecture
 

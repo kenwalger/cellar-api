@@ -13,7 +13,23 @@ To be clear about what's what:
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 4b implemented.** The FastAPI application, the master course script, a portable JavaScript parser, a portable production estimator, and Google Apps Script tooling that generates all four documents from a Google Doc exist today. Everything is tested offline. The project owner reported successful live Google Docs runs of Phase 3B and Phase 4 (run `6146a211`). **The Phase 4b cleanup hasn't been run in a live Google account yet.** It changes how SCREENCAST examples and PAUSE cues are rendered, adds a Production Summary overview table, and revises the status-code narration. That's a manual checkpoint (see [apps-script/README.md](apps-script/README.md#phase-4b-cleanup-and-final-acceptance)). See [docs/roadmap.md](docs/roadmap.md).
+> **Status: Phase 5 implemented: a [developer learning lab](docs/lab/README.md).** The FastAPI application, the master course script, a portable JavaScript parser, a portable production estimator, and Google Apps Script tooling that generates all four documents from a Google Doc exist today. Everything is tested offline. The project owner reported successful live Google Docs runs of Phase 3B and Phase 4 (run `6146a211`). **The Phase 4b cleanup hasn't been run in a live Google account yet.** It changes how SCREENCAST examples and PAUSE cues are rendered, adds a Production Summary overview table, and revises the status-code narration. That's a manual checkpoint (see [apps-script/README.md](apps-script/README.md#phase-4b-cleanup-and-final-acceptance)). The learning lab's screenshots haven't been captured yet. See [docs/roadmap.md](docs/roadmap.md).
+
+## Learning lab
+
+**Start with [the learning lab](docs/lab/README.md).** Five guided exercises (about an hour, with no Google account or paid service) take you through the master script, the parser and its diagnostics, a deliberately broken copy, the duration estimate and its assumptions, and the provenance manifest. An optional sixth exercise generates the four Google Docs in your own account. You need Git, Node.js 22+, and a terminal.
+
+| | Exercise | Time |
+|---|---|---|
+| 0 | [Set up](docs/lab/00-setup.md) | 5 min |
+| 1 | [Inspect the source](docs/lab/01-inspect-the-source.md) | 10 min |
+| 2 | [Parse and validate](docs/lab/02-parse-and-validate.md) | 10 min |
+| 3 | [Break the contract](docs/lab/03-break-the-contract.md) | 10 min |
+| 4 | [Estimate production](docs/lab/04-estimate-production.md) | 12 min |
+| 5 | [Provenance and regeneration](docs/lab/05-provenance-and-regeneration.md) | 10 min |
+| 6 | [Optional: generate the Google Docs](docs/lab/06-google-docs-extension.md) | 45 to 60 min |
+
+[`docs/index.md`](docs/index.md) is a landing page that's ready for GitHub Pages (not deployed). Instructors and maintainers should read [the maintainer guide](docs/lab/maintainers.md).
 
 ## What's in the repository
 
@@ -26,6 +42,7 @@ To be clear about what's what:
 - A dependency-free JavaScript parser, [`parser/`](parser/README.md). It turns the script into a structured intermediate representation with source line numbers, reports structural problems as diagnostics, and is tested with Node's built-in test runner.
 - A dependency-free JavaScript production estimator, [`production/`](production/README.md). It reads the parser's IR, counts spoken words with a documented policy, estimates narration time at a configurable speaking rate, and flags videos over a configurable threshold. It never reparses the script.
 - A Google Apps Script project, [`apps-script/`](apps-script/README.md). It reads the master Google Doc, validates it with the unchanged parser, and generates ONSET, MOTION, SCREENCAST, and Production Summary Google Docs plus a provenance manifest in a new folder for each run. Its logic is tested offline with test doubles.
+- A developer learning lab, [`docs/lab/`](docs/lab/README.md), whose documented outputs and examples are checked against the code in CI.
 - Project documentation.
 
 ## Architecture
@@ -183,6 +200,7 @@ The tests use FastAPI's `TestClient`, so they don't need a running server.
 cd parser
 npm test                                          # run the parser tests
 npm run print-ir -- ../course/master-script.md    # print the IR and diagnostics as JSON
+npm run print-outline -- ../course/master-script.md   # print a short outline and the diagnostics
 ```
 
 See [parser/README.md](parser/README.md) for the IR, the diagnostic codes, and error recovery.
@@ -207,11 +225,18 @@ node scripts/sync-apps-script.mjs --check        # parser and estimator copies a
 
 To run the tooling in Google, follow [apps-script/README.md](apps-script/README.md).
 
+### Learning lab
+
+```bash
+node scripts/lab-docs.mjs --check   # documented outputs, estimate tables, example manifests, links, and commands match the code
+node scripts/lab-docs.mjs           # refresh them after a parser, estimator, or script change, then review the diff
+```
+
 ## Limitations
 
 - The data is read from a static JSON file. Edits take effect only after a restart.
 - There's no authentication, persistence, pagination, or write access. These are deliberate omissions for a teaching fixture.
-- The Production Summary hasn't been run against a real Google account yet (see the live checklist in [apps-script/README.md](apps-script/README.md#live-verification-checklist)). The Phase 3B documents were reported working in a live run by the project owner.
+- The Phase 4b presentation changes haven't been run against a real Google account yet (see the live checklist in [apps-script/README.md](apps-script/README.md#live-verification-checklist)). The project owner reported live runs of the Phase 3B documents and the Phase 4 Production Summary.
 - Durations in the Production Summary are estimates from a fixed speaking rate, not predictions of finished video length. See [production/README.md](production/README.md#what-the-estimate-leaves-out).
 
 ## Roadmap
@@ -223,10 +248,9 @@ To run the tooling in Google, follow [apps-script/README.md](apps-script/README.
    - **3B: Google Docs integration** (done; live run reported by the project owner): an Apps Script adapter and generation of the three section docs
 4. **Phase 4: Production summary** (done; live run reported by the project owner): a portable estimator and the fourth document
    - **4b: Cleanup and final acceptance** (implemented; live check pending): clearer SCREENCAST examples and PAUSE cues, a video overview table, and more precise status-code narration
+5. **Phase 5: Developer learning lab** (done; screenshots pending): five local exercises, an optional Google Docs exercise, an evidence guide, and a GitHub Pages-ready landing page
 
-The full learning-lab walkthrough and screenshots are still to come.
-
-Details are in [docs/roadmap.md](docs/roadmap.md). The planned hands-on tutorial is outlined in [docs/learning-lab.md](docs/learning-lab.md).
+Details are in [docs/roadmap.md](docs/roadmap.md).
 
 ## Contributing
 

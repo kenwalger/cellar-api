@@ -55,7 +55,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - A Production Summary **Video overview**: a native Google Docs table (video, spoken words, estimated duration, status) generated from the estimator result, placed between the course overview and the detailed breakdown.
   - A Phase 4b live verification checklist in `apps-script/README.md`, with exact steps for renaming the master Google Doc and applying the narration edit to it.
 
+- Developer learning lab (Phase 5):
+  - `docs/lab/`: an overview with twelve learning objectives mapped to exercises, five local exercises that need no Google account (set up; inspect the source; parse and validate; break the contract; estimate production; provenance and regeneration; about 57 minutes in all), and an optional Google Docs exercise. Each has a time, an objective, prerequisites, exact commands, expected results, reflection questions, evidence to capture, and a completion criterion.
+  - `docs/lab/evidence/README.md`: twelve screenshots, each with what it demonstrates, what to show and redact, a filename, alt text, and whether it's local or Google. The inventory records that none has been captured yet.
+  - `docs/lab/troubleshooting.md` (including Windows PowerShell quoting and encoding) and `docs/lab/maintainers.md` (fresh-checkout run, verification, independent fixtures, updating after code changes, privacy, levels of claims, a 60-minute workshop plan, and GitHub Pages publishing requirements).
+  - `docs/index.md`: a GitHub Pages-ready landing page with a Mermaid architecture diagram that matches the implementation. Nothing is deployed, and no Pages workflow was added.
+  - `docs/lab/examples/`: two instructional example manifests produced offline by the real `Generator` and `Manifest` code with test doubles (placeholder IDs on the reserved `.test` domain, and labeled as not from a live run), plus a tiny valid script on an unrelated subject.
+  - `npm run print-outline` in `parser/` (`src/outline.js`, `src/print-outline.js`, with 5 tests): a Node-only text outline of a parse result, with sections in order, source lines, annotation counts, and diagnostics. The portable parser core is unchanged.
+  - `scripts/lab-docs.mjs`: refreshes, and with `--check` verifies, the lab's documented command outputs, estimate tables, and example manifests against the current code, plus relative links and heading anchors, referenced commands, Mermaid syntax, Liquid safety, and the absence of private Google identifiers. It has no dependencies.
+
 ### Changed
+
+- Phase 5:
+  - CI runs `node scripts/lab-docs.mjs --check` in the `parser` job.
+  - `docs/learning-lab.md` now points to `docs/lab/` and keeps only the two API activities that are outside the lab.
+  - `.gitignore` ignores `lab-work/`, the lab's scratch folder.
+  - `README.md` gains a Learning lab section. `README.md`, `CLAUDE.md`, `docs/roadmap.md`, `docs/architecture.md`, `parser/README.md`, and `apps-script/README.md` were updated for Phase 5. A stale README limitation now says that only the Phase 4b changes are unverified live.
 
 - Phase 4b cleanup:
   - `[PAUSE]` cues render without the blank separator lines around them, and get even spacing (6 pt before and after) in Google Docs. Their text and position are unchanged, and so are the IR and estimator.

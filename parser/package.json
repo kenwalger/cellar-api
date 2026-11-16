@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "print-ir": "node src/print-ir.js"
+    "print-ir": "node src/print-ir.js",
+    "print-outline": "node src/print-outline.js"
   }
 }
