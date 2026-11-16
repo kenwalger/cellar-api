@@ -5,11 +5,11 @@ import { describe, test } from "node:test";
 
 import { bodyFromText, fakeServices, lines, loadAppsScript, plain, readRepoFile, sha256Hex } from "./helpers.js";
 
-const { DocumentReader, Generator, Validation } = loadAppsScript();
+const { DocumentReader, Generator, Manifest, ProductionEstimator, Render, Summary, Validation } = loadAppsScript();
 const master = readRepoFile("course/master-script.md");
 const expectedStructure = JSON.parse(readRepoFile("course/fixtures/expected-structure.json"));
 
-function inputFor(text, { requireExpectedStructure = true } = {}) {
+function inputFor(text, { requireExpectedStructure = true, estimateOptions } = {}) {
   const extraction = DocumentReader.readBody(bodyFromText(text));
   return {
     source: { documentId: "source-id", url: "https://docs.test/source-id", title: "Master Script", lastUpdated: null },
@@ -17,6 +17,8 @@ function inputFor(text, { requireExpectedStructure = true } = {}) {
     run: Validation.prepareRun(extraction, { requireExpectedStructure, expectedStructure }),
     outputFolderId: "parent-folder",
     parser: { version: "0.1.0", coreSha256: "cd".repeat(32) },
+    estimator: { version: "0.1.0", coreSha256: "ef".repeat(32) },
+    estimateOptions,
   };
 }
 
@@ -30,10 +32,12 @@ describe("successful generation", () => {
   const manifestFile = Object.values(services.store.files)[0];
   const manifest = JSON.parse(manifestFile.content);
 
-  test("creates one folder, three documents, and one manifest, in that order", () => {
+  test("creates one folder, four documents, and one manifest, in that order", () => {
     assert.equal(result.status, "complete");
     assert.deepEqual(methods(services), [
       "createFolder",
+      "createDocument",
+      "writeDocument",
       "createDocument",
       "writeDocument",
       "createDocument",
@@ -56,13 +60,48 @@ describe("successful generation", () => {
     assert.equal(manifestFile.name, "manifest.json");
   });
 
-  test("writes the rendered role documents", () => {
+  test("writes the three role documents and the Production Summary", () => {
     const docs = Object.values(services.store.documents);
     assert.deepEqual(
       docs.map((d) => d.title.split(" — ")[0]),
-      ["ONSET", "MOTION", "SCREENCAST"],
+      ["ONSET", "MOTION", "SCREENCAST", "Production Summary"],
     );
     assert.ok(docs.every((d) => Array.isArray(d.paragraphs) && d.paragraphs.length > 10));
+  });
+
+  const courseTitle = "Understanding APIs: A Winery's Digital Cellar";
+  const parsedMaster = () =>
+    Validation.prepareRun(DocumentReader.readBody(bodyFromText(master)), { requireExpectedStructure: false }).parse
+      .document;
+
+  test("the role documents are exactly what Render produces, unchanged by Phase 4", () => {
+    const meta = { courseTitle, sourceTitle: "Master Script", generatedAt: "2026-11-13T23:16:05.000Z", runId: "run00001" };
+    const docs = Object.values(services.store.documents);
+    Render.ROLES.forEach((role, index) => {
+      const expectedModel = plain(Render.buildRoleDocument(parsedMaster(), role, meta));
+      assert.equal(docs[index].title, expectedModel.title);
+      assert.deepEqual(plain(docs[index].paragraphs), expectedModel.paragraphs);
+    });
+  });
+
+  test("the Production Summary is built from the estimator's results", () => {
+    const estimate = ProductionEstimator.estimateProduction(parsedMaster());
+    const expectedModel = plain(
+      Summary.buildSummaryDocument(estimate, {
+        courseTitle,
+        sourceTitle: "Master Script",
+        sourceUrl: "https://docs.test/source-id",
+        generatedAt: "2026-11-13T23:16:05.000Z",
+        runId: "run00001",
+        folderName: Manifest.formatFolderName(new Date(Date.UTC(2026, 10, 13, 23, 16, 5)), "run00001"),
+        parser: { version: "0.1.0", coreSha256: "cd".repeat(32) },
+        estimator: { version: "0.1.0", coreSha256: "ef".repeat(32) },
+      }),
+    );
+    const summaryDoc = Object.values(services.store.documents)[3];
+    assert.equal(summaryDoc.title, expectedModel.title);
+    assert.deepEqual(plain(summaryDoc.paragraphs), expectedModel.paragraphs);
+    assert.ok(summaryDoc.paragraphs.some((p) => p.text === "Spoken words: 1980"));
   });
 
   test("the manifest links the source to every output", () => {
@@ -77,10 +116,28 @@ describe("successful generation", () => {
         ["ONSET", "complete"],
         ["MOTION", "complete"],
         ["SCREENCAST", "complete"],
+        ["PRODUCTION_SUMMARY", "complete"],
       ],
     );
     assert.deepEqual(manifest.counts.sections, { ONSET: 6, MOTION: 3, SCREENCAST: 4, total: 13 });
     assert.deepEqual(manifest.structureCheck, { checked: true, matches: true });
+  });
+
+  test("the manifest records estimator provenance, configuration, totals, and warnings", () => {
+    assert.equal(manifest.schemaVersion, 2);
+    assert.deepEqual(manifest.estimator, {
+      schemaVersion: 1,
+      version: "0.1.0",
+      coreSha256: "ef".repeat(32),
+      config: { wordsPerMinute: 140, longVideoThresholdMinutes: 3, screencastAllowanceSecondsPerSection: 0 },
+    });
+    assert.equal(manifest.estimate.totals.spokenWordCount, 1980);
+    assert.equal(manifest.estimate.totals.videosOverThreshold, 1);
+    assert.equal(manifest.estimate.videos.length, 6);
+    assert.deepEqual(
+      manifest.estimate.warnings.map((w) => [w.code, w.stageNumber, w.videoNumber]),
+      [["LONG_VIDEO_ESTIMATE", 2, 2]],
+    );
   });
 
   test("the manifest doesn't contain document content", () => {
@@ -89,6 +146,32 @@ describe("successful generation", () => {
 });
 
 describe("blocking and warnings", () => {
+  test("an invalid estimator configuration stops the run before any service call", () => {
+    const services = fakeServices();
+    assert.throws(
+      () => Generator.generate(services, inputFor(master, { estimateOptions: { wordsPerMinute: 0 } })),
+      /Invalid estimator configuration/,
+    );
+    assert.deepEqual(services.calls, []);
+  });
+
+  test("an estimator failure on the document stops the run before any service call", () => {
+    const services = fakeServices();
+    const input = inputFor(master);
+    input.run.parse.document.stages[0].videos[0].sections[1].content[0].type = "NARRATION";
+    assert.throws(() => Generator.generate(services, input), /NARRATION/);
+    assert.deepEqual(services.calls, []);
+  });
+
+  test("long-video warnings don't block generation", () => {
+    const services = fakeServices();
+    const input = inputFor(master, { estimateOptions: { longVideoThresholdMinutes: 1 } });
+    assert.equal(plain(Generator.generate(services, input)).status, "complete");
+    const manifest = JSON.parse(Object.values(services.store.files)[0].content);
+    assert.equal(manifest.estimate.warnings.length, 6);
+    assert.equal(manifest.estimator.config.longVideoThresholdMinutes, 1);
+  });
+
   test("error diagnostics block generation before any service call", () => {
     const services = fakeServices();
     const result = plain(
@@ -162,6 +245,8 @@ describe("partial failure", () => {
         ["MOTION", "incomplete"],
       ],
     );
+    // The estimate was made before the run started, so it's in the failure manifest.
+    assert.equal(partial.manifest.estimate.totals.spokenWordCount, 1980);
 
     // The failure manifest is written into the run folder and the folder is marked.
     const files = Object.values(services.store.files);
@@ -171,6 +256,22 @@ describe("partial failure", () => {
     assert.match(folder.name, / — FAILED$/);
     // Nothing is deleted: both created documents still exist.
     assert.equal(Object.keys(services.store.documents).length, 2);
+  });
+
+  test("a failed Production Summary write is recorded as incomplete", () => {
+    const services = fakeServices({ failOn: { method: "writeDocument", nth: 4 } });
+    assert.throws(() => Generator.generate(services, inputFor(master)), /Simulated writeDocument failure/);
+    const manifest = JSON.parse(Object.values(services.store.files)[0].content);
+    assert.equal(manifest.status, "failed");
+    assert.deepEqual(
+      manifest.output.documents.map((d) => [d.role, d.status]),
+      [
+        ["ONSET", "complete"],
+        ["MOTION", "complete"],
+        ["SCREENCAST", "complete"],
+        ["PRODUCTION_SUMMARY", "incomplete"],
+      ],
+    );
   });
 
   test("a failure to create the folder creates nothing else", () => {

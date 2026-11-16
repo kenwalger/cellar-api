@@ -41,13 +41,58 @@ const input = {
   issues: [
     { source: "parser", code: "EMPTY_BLOCK", severity: "warning", line: 8, element: 8, partInElement: 1, message: "m" },
   ],
+  estimator: { version: "0.1.0", coreSha256: "ef".repeat(32) },
+  estimate: {
+    schemaVersion: 1,
+    config: { wordsPerMinute: 140, longVideoThresholdMinutes: 3, screencastAllowanceSecondsPerSection: 0 },
+    stages: [{ stageNumber: 1 }],
+    videos: [
+      {
+        stageNumber: 1,
+        videoNumber: 1,
+        title: "Long",
+        sectionSequence: ["ONSET"],
+        sectionCounts: { ONSET: 1, MOTION: 0, SCREENCAST: 0 },
+        spokenWordCount: 700,
+        technicalTokenCount: 1,
+        narrationDurationSeconds: 300,
+        screencastAllowanceSeconds: 0,
+        estimatedDurationSeconds: 300,
+        warnings: [{ code: "LONG_VIDEO_ESTIMATE" }],
+      },
+    ],
+    totals: {
+      stageCount: 1,
+      videoCount: 1,
+      sectionCounts: { ONSET: 1, MOTION: 0, SCREENCAST: 0 },
+      spokenWordCount: 700,
+      technicalTokenCount: 1,
+      narrationDurationSeconds: 300,
+      screencastAllowanceSeconds: 0,
+      estimatedDurationSeconds: 300,
+      videosOverThreshold: 1,
+    },
+    warnings: [
+      {
+        code: "LONG_VIDEO_ESTIMATE",
+        stageNumber: 1,
+        videoNumber: 1,
+        title: "Long",
+        estimatedDurationSeconds: 300,
+        thresholdSeconds: 180,
+        includesScreencastAllowance: false,
+        message: "a message for people",
+      },
+    ],
+    assumptions: [{ code: "NARRATION_ONLY", text: "t" }],
+  },
   error: null,
 };
 
-test("buildManifest records provenance, outputs, counts, and warnings", () => {
+test("buildManifest records provenance, outputs, counts, estimates, and warnings", () => {
   const manifest = plain(Manifest.buildManifest(input));
   assert.deepEqual(manifest, {
-    schemaVersion: 1,
+    schemaVersion: 2,
     status: "complete",
     runId: "a1b2c3d4",
     generatedAt: "2026-11-13T23:16:05.000Z",
@@ -60,6 +105,12 @@ test("buildManifest records provenance, outputs, counts, and warnings", () => {
       extractedLineCount: 401,
     },
     parser: { version: "0.1.0", coreSha256: "cd".repeat(32) },
+    estimator: {
+      schemaVersion: 1,
+      version: "0.1.0",
+      coreSha256: "ef".repeat(32),
+      config: { wordsPerMinute: 140, longVideoThresholdMinutes: 3, screencastAllowanceSecondsPerSection: 0 },
+    },
     output: {
       folderId: "folder-1",
       folderUrl: "https://drive.test/folder-1",
@@ -71,8 +122,40 @@ test("buildManifest records provenance, outputs, counts, and warnings", () => {
     counts: { stages: 2, videos: 6, sections: { ONSET: 6, MOTION: 3, SCREENCAST: 4, total: 13 } },
     structureCheck: { checked: true, matches: true },
     warnings: [{ source: "parser", code: "EMPTY_BLOCK", line: 8, message: "m" }],
+    estimate: {
+      totals: input.estimate.totals,
+      videos: [
+        {
+          stageNumber: 1,
+          videoNumber: 1,
+          title: "Long",
+          spokenWordCount: 700,
+          technicalTokenCount: 1,
+          narrationDurationSeconds: 300,
+          screencastAllowanceSeconds: 0,
+          estimatedDurationSeconds: 300,
+        },
+      ],
+      warnings: [
+        {
+          code: "LONG_VIDEO_ESTIMATE",
+          stageNumber: 1,
+          videoNumber: 1,
+          title: "Long",
+          estimatedDurationSeconds: 300,
+          thresholdSeconds: 180,
+          includesScreencastAllowance: false,
+        },
+      ],
+    },
     error: null,
   });
+});
+
+test("buildManifest leaves out assumption text and warning messages", () => {
+  const json = JSON.stringify(Manifest.buildManifest(input));
+  assert.doesNotMatch(json, /a message for people/);
+  assert.doesNotMatch(json, /NARRATION_ONLY/);
 });
 
 test("buildManifest handles a failed run with no folder", () => {

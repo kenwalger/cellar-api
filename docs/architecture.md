@@ -1,13 +1,14 @@
 # Architecture
 
-This document has four parts:
+This document has five parts:
 
 1. The **implemented** API (Phase 1).
 2. The **written** master script and its fixtures (Phase 2).
 3. The **implemented** portable parser and validator (Phase 3A).
-4. The **implemented** Google Docs integration and ONSET/MOTION/SCREENCAST generation (Phase 3B), and the **planned** Production Summary (Phase 4).
+4. The **implemented** portable production estimator (Phase 4).
+5. The **implemented** Google Docs integration: ONSET, MOTION, and SCREENCAST generation (Phase 3B) and the Production Summary (Phase 4).
 
-All implemented code is tested offline. The Google Docs integration hasn't yet been run against a real Google account. That's a manual checkpoint, described in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist).
+All implemented code is tested offline. The project owner reported a successful live Google Docs run of the Phase 3B workflow. The Phase 4 additions haven't been run in a real Google account yet. That's a manual checkpoint, described in [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist).
 
 ## Part 1: Implemented API
 
@@ -80,9 +81,35 @@ flowchart LR
 - **The parser checks grammar, not the course's shape.** The two-stages-of-three-videos shape is checked by the acceptance test against `course/fixtures/expected-structure.json`.
 - **The core is portable.** It's one classic script with a single global and a CommonJS guard for Node. Tests run it in an empty `vm` context, but it hasn't yet been run in Google Apps Script.
 
-## Part 4: Google Docs workflow
+## Part 4: Implemented production estimator (Phase 4)
 
-### Implemented (Phase 3B)
+[`production/`](../production) contains a dependency-free JavaScript estimator. It reads the parser's IR and returns word counts, estimated durations, long-video warnings, and the assumptions behind them. The details are in [`production/README.md`](../production/README.md).
+
+```mermaid
+flowchart LR
+    IR["Parser IR<br/>(no error diagnostics)"] --> Core
+    Options["Options<br/>WPM · threshold · allowance"] --> Core
+    subgraph Core["production-estimator.cjs (portable core)"]
+        Classify["Spoken content<br/>ONSET text + VOICEOVER<br/>(from the grammar)"] --> Count["Word count<br/>whitespace tokens with<br/>a letter or digit"]
+        Count --> Durations["Durations<br/>words × 60 / WPM<br/>+ allowance per SCREENCAST"]
+        Durations --> Warnings["LONG_VIDEO_ESTIMATE<br/>estimate over threshold"]
+    end
+    Core --> Result["videos · stages · totals<br/>warnings · assumptions"]
+    Core --> GAS["apps-script/ProductionEstimator.js<br/>(byte-for-byte copy)"]
+```
+
+### Design notes
+
+- **The grammar decides what's spoken.** The estimator counts ONSET text and `VOICEOVER` text and nothing else. It refuses (throws on) any section type, block type, or content kind whose spoken status it doesn't know, instead of guessing.
+- **It never reparses.** The input is the IR. The parser and the generation gate decide validity. An unclosed section, which only a failed parse produces, is refused.
+- **Facts and assumptions stay separate.** Section counts and word counts are observations. Durations and warnings depend on a configuration that's echoed in every result, along with plain-language assumption statements.
+- **Fail loudly on configuration.** Unknown, non-numeric, non-finite, zero (for the rate or threshold), and negative values are errors. They never fall back to the defaults.
+- **Exact arithmetic where it matters.** Values keep full precision, multiplication comes before division, and totals are summed from the video values in document order. Rounding happens only for display.
+- **Same core, two hosts.** Like the parser, it's one classic script with one global. It's copied into Apps Script by the sync script and checked for drift in CI.
+
+## Part 5: Google Docs workflow
+
+### Implemented (Phases 3B and 4)
 
 [`apps-script/`](../apps-script) is a Google Apps Script project with two manual entry points: `validateMasterDocument()` (read-only) and `generateProductionDocuments()`. Setup and operation are documented in [`apps-script/README.md`](../apps-script/README.md).
 
@@ -92,21 +119,27 @@ flowchart TD
     Reader --> Parser["ProductionScript<br/>(unchanged parser core)"]
     Parser --> Validation["Validation<br/>errors block · warnings pass<br/>expected-structure check"]
     Validation -- errors --> Stop["Log diagnostics<br/>no files created"]
+    Validation -- no errors --> Estimator["ProductionEstimator<br/>(unchanged estimator core)"]
+    Estimator -- invalid settings --> Stop
+    Estimator --> Summary["Summary<br/>Production Summary model"]
     Validation -- no errors --> Render["Render<br/>ONSET · MOTION · SCREENCAST models"]
     Render --> Generator["Generator"]
+    Summary --> Generator
     Generator --> Folder["New run folder<br/>Digital Cellar Production — date UTC — run ID"]
-    Folder --> Docs["3 Google Docs"]
+    Folder --> Docs["4 Google Docs"]
     Folder --> Manifest["manifest.json"]
 ```
 
 | File | Responsibility | Tested offline |
 |---|---|---|
 | `ProductionScript.js` | Byte-for-byte copy of the parser core | Yes. A drift check runs in CI. |
-| `GeneratedData.js` | Expected structure, parser version, and core hash, generated from the repository | Yes. A drift check runs in CI. |
-| `Config.js` | Script Properties: master document ID, optional output folder, structure-check switch | Yes |
+| `ProductionEstimator.js` | Byte-for-byte copy of the estimator core | Yes. A drift check runs in CI. |
+| `GeneratedData.js` | Expected structure, plus parser and estimator versions and core hashes, generated from the repository | Yes. A drift check runs in CI. |
+| `Config.js` | Script Properties: master document ID, optional output folder, structure-check switch, and the three estimator settings | Yes |
 | `DocumentReader.js` | Body → text lines, soft line breaks, and unsupported-content diagnostics | Yes, with Body test doubles |
 | `Validation.js` | Parse, map diagnostics to paragraphs, compare structure, decide generate/block, format the log | Yes |
 | `Render.js` | Role selection and paragraph models, verbatim and in source order | Yes |
+| `Summary.js` | Production Summary paragraph model and estimate log lines, from the estimator's result | Yes |
 | `Manifest.js` | Run folder naming and the manifest object | Yes |
 | `Generator.js` | Run orchestration through injected services, including partial-failure handling | Yes, with fake services |
 | `GoogleServices.js` | `DocumentApp`, `DriveApp`, and `Utilities` calls | No. Covered only by the live checkpoint. |
@@ -114,18 +147,22 @@ flowchart TD
 
 ### Design notes
 
-- **The parser is the only interpreter.** The adapter only turns paragraphs into text, and it never infers structure from formatting. All structure comes from the unchanged parser core.
-- **The parser exists once.** `parser/src/production-script.cjs` is the source. `scripts/sync-apps-script.mjs` writes the Apps Script copy, and `--check` (run in CI) fails on any difference.
+- **The parser is the only interpreter, and the estimator is the only calculator.** The adapter only turns paragraphs into text, and it never infers structure from formatting. All structure comes from the unchanged parser core. Every number in the Production Summary comes from the estimator core.
+- **The parser and estimator each exist once.** `parser/src/production-script.cjs` and `production/src/production-estimator.cjs` are the sources. `scripts/sync-apps-script.mjs` writes the Apps Script copies, and `--check` (run in CI) fails on any difference.
 - **Logic is testable apart from Google.** Every Google API call is in `GoogleServices.js`. The other files load in Node exactly as Apps Script loads them: as plain scripts in one shared global scope.
-- **The decision comes before the first write.** Configuration, document access, extraction, parsing, the structure check, and the output folder are all checked, and all three documents are rendered in memory, before anything is created in Drive. Error-level diagnostics stop the run with no files created. Warnings are allowed and recorded in the manifest.
+- **The decision comes before the first write.** Configuration (including the estimator settings), document access, extraction, parsing, the structure check, the production estimate, and the output folder are all checked, and all four documents are rendered in memory, before anything is created in Drive. Error-level diagnostics, invalid estimator settings, and an estimator failure all stop the run with no files created. Diagnostic warnings and long-video warnings are allowed and recorded in the manifest.
 - **The acceptance checkpoint.** By default (`REQUIRE_EXPECTED_STRUCTURE=true`), the Google Doc must reproduce `course/fixtures/expected-structure.json` exactly. The parser stays generic, and the check can be turned off for other courses.
 - **Runs are independent.** Every run creates a new folder named with its UTC timestamp and run ID. Nothing from earlier runs is reused, overwritten, or deleted.
-- **Provenance.** `manifest.json` records the source document ID, URL, title, and last-updated time, a SHA-256 hash of the extracted text, the parser version and core hash, each output's role, ID, and URL, counts, warnings, and status. It contains no document content.
+- **Provenance.** `manifest.json` (schema version 2) records:
+  - the source document's ID, URL, title, and last-updated time, and a SHA-256 hash of the extracted text
+  - the parser's version and core hash, and the estimator's version, core hash, and configuration
+  - each output's role, ID, and URL
+  - counts and diagnostic warnings
+  - the estimate's totals, per-video figures, and long-video warnings
+  - the run's status
+
+  It contains no document content.
 - **Partial failures.** A failed write throws. If the run folder exists, a `"failed"` manifest listing every created document is written to it, and the folder is renamed with ` — FAILED`. Nothing is deleted.
-
-### Planned (Phase 4)
-
-- **Production Summary:** a fourth document with estimated durations, content statistics, the configurable long-video threshold, and validation findings.
 
 ### Full pipeline
 
@@ -137,7 +174,8 @@ flowchart TD
     Validate --> Onset["ONSET doc"]
     Validate --> Motion["MOTION doc"]
     Validate --> Screencast["SCREENCAST doc"]
-    Validate -.-> Summary["Production Summary doc<br/>(planned, Phase 4)"]
+    Validate --> Estimate["Production estimator<br/>(implemented)"]
+    Estimate --> Summary["Production Summary doc"]
     Onset & Motion & Screencast & Summary --> Manifest["Generation manifest"]
 ```
 
@@ -145,13 +183,11 @@ flowchart TD
 2. **Parser** *(core in Phase 3A, running in Apps Script in Phase 3B)*: reads the document structure (headings, tags, body text).
 3. **Intermediate representation** *(implemented in Phase 3A)*: a plain data structure that separates parsing from output, so each generator works on clean data.
 4. **Structural validation** *(implemented in Phase 3A)*: reports problems such as unknown or missing tags, empty sections, or unexpected ordering.
-5. **Generators**: the three section-specific documents are implemented (Phase 3B). The Production Summary, with approximate video durations and a configurable long-video warning, is planned (Phase 4).
-6. **Generation manifest** *(implemented in Phase 3B)*: records what was generated, from which source, and any validation warnings.
+5. **Generators**: the three section-specific documents are implemented (Phase 3B). The Production Summary, with estimated narration durations, content statistics, and a configurable long-video warning, is implemented (Phase 4) on top of the portable estimator.
+6. **Generation manifest** *(implemented in Phase 3B, extended in Phase 4)*: records what was generated, from which source, with which parser and estimator, and any warnings.
 
 ### Source of truth and regeneration
 
 - **One direction only.** Changes go into the master Google Doc. Generated documents are derivative outputs and are never edited to change the course.
 - **No synchronization.** Generated documents aren't kept in sync with the master. If the master changes after generation, the existing outputs stay as they were.
-- **Regeneration creates a new set.** Running the generator again produces a new, identifiable set of documents with its own generation manifest. That's three documents now, and four once the Production Summary exists. It doesn't update the previous set in place, so you can always tell which version of the master a set came from.
-
-The Production Summary is intent, not a specification, and may change during Phase 4.
+- **Regeneration creates a new set.** Running the generator again produces a new, identifiable set of four documents with its own generation manifest. It doesn't update the previous set in place, so you can always tell which version of the master a set came from. To compare assumptions, change an estimator setting and generate again. The source script doesn't change.

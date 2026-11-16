@@ -44,9 +44,13 @@ jobs:
         run: npm test
         working-directory: parser
 
+      - name: Run production estimator tests
+        run: npm test
+        working-directory: production
+
       - name: Run Apps Script adapter tests
         run: npm test
         working-directory: apps-script
 
-      - name: Check Apps Script copies match their sources
+      - name: Check Apps Script copies (parser and estimator) match their sources
         run: node scripts/sync-apps-script.mjs --check

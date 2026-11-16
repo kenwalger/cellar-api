@@ -1,6 +1,6 @@
 # Roadmap
 
-Four milestones. Each phase builds on the previous one. Phases 1, 2, 3A, and 3B are complete in the repository. Phase 3B still needs a person to run it against a live Google account.
+Four milestones. Each phase builds on the previous one. Phases 1, 2, 3A, 3B, and 4 are implemented in the repository. The project owner reported a successful live Google Docs run of Phase 3B. Phase 4 still needs a person to run it against a live Google account. The learning-lab walkthrough and screenshots are still to come.
 
 ## Phase 1: Repository and API ✅
 
@@ -31,7 +31,7 @@ Write the fictional six-video course *Understanding APIs: A Winery's Digital Cel
 - A portable core with no module system or host APIs, checked in an isolated `vm` context but not yet in Google Apps Script
 - CI runs the parser tests alongside the Python checks
 
-### Phase 3B: Google Docs integration ✅ (implementation; live check pending)
+### Phase 3B: Google Docs integration ✅
 
 Google Apps Script tooling in [`apps-script/`](../apps-script):
 
@@ -44,9 +44,25 @@ Google Apps Script tooling in [`apps-script/`](../apps-script):
 **Verification status:**
 
 - **Automated, offline (done):** 67 Node tests for extraction, validation, rendering, the manifest, generation (with fake Drive and Docs services), configuration, portability, and the drift check. These are in addition to the 50 parser tests.
-- **Live Google Apps Script (not done yet):** a person must run the [live verification checklist](../apps-script/README.md#live-verification-checklist) in a real Google account. Until then, Apps Script compatibility and output formatting are unconfirmed.
+- **Live Google Apps Script (reported):** the project owner reported a successful live Google Docs run. The item-by-item [checklist](../apps-script/README.md#phase-3b-three-role-documents-and-the-manifest) results and screenshots haven't been recorded in the repository yet.
 
-## Phase 4: Production summary and learning lab (planned)
+## Phase 4: Production summary ✅ (implementation; live check pending)
 
-- Generate a fourth Google Doc containing approximate video durations, a configurable long-video threshold, and validation findings.
-- Add screenshots (`docs/screenshots/`), step-by-step instructions, and a reproducible learning lab. See [learning-lab.md](learning-lab.md).
+A portable estimator in [`production/`](../production) and a fourth generated document:
+
+- `estimateProduction(document, options)` reads the parser's IR (it never reparses) and counts spoken words: ONSET text and `VOICEOVER` blocks only, as the grammar defines them. It follows a documented word-count policy.
+- Narration seconds = words / words per minute × 60, plus an optional fixed allowance per SCREENCAST section. Values are kept at full precision, and stage and course totals add up exactly.
+- Configurable assumptions: 140 words per minute, a three-minute threshold, and a 0-second screencast allowance (a narration-only baseline) by default. Invalid settings are rejected, never defaulted.
+- `LONG_VIDEO_ESTIMATE` warnings for videos strictly over the threshold. At the defaults, only Stage 2, Video 2 (666 words, about 4 min 45 s) is flagged. Warnings never block generation.
+- The Apps Script generator estimates before the first write and creates a **Production Summary** Google Doc with the configuration, a course overview, a per-video breakdown, warnings, the methodology and its exclusions, and provenance.
+- The manifest moves to schema version 2. It adds the estimator version, core hash, configuration, totals, per-video figures, and warnings, plus the fourth output document.
+- `apps-script/ProductionEstimator.js` is a byte-for-byte copy of the estimator core, checked by the sync script in CI.
+
+**Verification status:**
+
+- **Automated, offline (done):** 75 estimator tests, 107 Apps Script adapter tests (up from 67), and the 50 unchanged parser tests, plus the parser and estimator drift check.
+- **Live Google Apps Script (not done yet):** the [Phase 4 checklist](../apps-script/README.md#phase-4-production-summary).
+
+## Still to come: learning lab
+
+- Add screenshots (`docs/screenshots/`), step-by-step instructions, and a reproducible learning lab. See [learning-lab.md](learning-lab.md). The Production Summary exercises (6 and 7) are outlined there.

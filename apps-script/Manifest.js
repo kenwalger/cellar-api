@@ -7,7 +7,8 @@
 var Manifest = (function () {
   "use strict";
 
-  const SCHEMA_VERSION = 1;
+  // 2: added estimator, estimate, and the PRODUCTION_SUMMARY output (Phase 4).
+  const SCHEMA_VERSION = 2;
   const FOLDER_PREFIX = "Digital Cellar Production";
 
   function pad(value) {
@@ -33,11 +34,13 @@ var Manifest = (function () {
   /**
    * @param {Object} input status, runId, generatedAt (Date), source, sourceSha256,
    *     lineCount, parser, folder (or null), documents, counts, structure,
-   *     issues, error (string or null).
+   *     issues, estimator ({version, coreSha256}), estimate (the result of
+   *     ProductionEstimator.estimateProduction), error (string or null).
    * @returns {Object} The manifest, ready for JSON.stringify.
    */
   function buildManifest(input) {
     const folder = input.folder;
+    const estimate = input.estimate;
     return {
       schemaVersion: SCHEMA_VERSION,
       status: input.status,
@@ -52,6 +55,12 @@ var Manifest = (function () {
         extractedLineCount: input.lineCount,
       },
       parser: { version: input.parser.version, coreSha256: input.parser.coreSha256 },
+      estimator: {
+        schemaVersion: estimate.schemaVersion,
+        version: input.estimator.version,
+        coreSha256: input.estimator.coreSha256,
+        config: estimate.config,
+      },
       output: {
         folderId: folder ? folder.id : null,
         folderUrl: folder ? folder.url : null,
@@ -70,6 +79,34 @@ var Manifest = (function () {
         .map(function (i) {
           return { source: i.source, code: i.code, line: i.line, message: i.message };
         }),
+      // Numbers only. Assumption text and warning messages are in the
+      // Production Summary document.
+      estimate: {
+        totals: estimate.totals,
+        videos: estimate.videos.map(function (v) {
+          return {
+            stageNumber: v.stageNumber,
+            videoNumber: v.videoNumber,
+            title: v.title,
+            spokenWordCount: v.spokenWordCount,
+            technicalTokenCount: v.technicalTokenCount,
+            narrationDurationSeconds: v.narrationDurationSeconds,
+            screencastAllowanceSeconds: v.screencastAllowanceSeconds,
+            estimatedDurationSeconds: v.estimatedDurationSeconds,
+          };
+        }),
+        warnings: estimate.warnings.map(function (w) {
+          return {
+            code: w.code,
+            stageNumber: w.stageNumber,
+            videoNumber: w.videoNumber,
+            title: w.title,
+            estimatedDurationSeconds: w.estimatedDurationSeconds,
+            thresholdSeconds: w.thresholdSeconds,
+            includesScreencastAllowance: w.includesScreencastAllowance,
+          };
+        }),
+      },
       error: input.error,
     };
   }

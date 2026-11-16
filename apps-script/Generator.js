@@ -1,6 +1,6 @@
 /**
- * Orchestrates one generation run: a new folder, three role documents, and a
- * manifest. All Drive and Docs access goes through `services` (GoogleServices
+ * Orchestrates one generation run: a new folder, the three role documents,
+ * the Production Summary, and a manifest. All Drive and Docs access goes through `services` (GoogleServices
  * in Apps Script, a fake in tests), so this logic is testable offline.
  *
  * Every run is independent. It creates a new folder and never reuses,
@@ -15,8 +15,11 @@ var Generator = (function () {
    * @param {Object} services now, newRunId, sha256Hex, createFolder,
    *     createDocument, writeDocument, createJsonFile, renameFolder.
    * @param {Object} input source, extraction, run (from Validation.prepareRun),
-   *     outputFolderId, parser.
+   *     outputFolderId, parser, estimator ({version, coreSha256}), and
+   *     estimateOptions (estimator options; undefined means the defaults).
    * @returns {Object} { status: "complete" | "blocked", runId, folder, documents, manifest, manifestFile }
+   * @throws {RangeError|Error} Before any service call, if the estimator
+   *     options are invalid or the document can't be estimated.
    * @throws {Error} If a Drive or Docs call fails after the run starts. The
    *     error's `result` holds the partial outcome (status "failed").
    */
@@ -26,9 +29,13 @@ var Generator = (function () {
       return { status: "blocked", runId: null, folder: null, documents: [], manifest: null, manifestFile: null };
     }
 
+    const document = run.parse.document;
+    // Estimate first: invalid settings stop the run before anything else.
+    const estimate = ProductionEstimator.estimateProduction(document, input.estimateOptions);
+
     const runId = services.newRunId();
     const generatedAt = services.now();
-    const document = run.parse.document;
+    const folderName = Manifest.formatFolderName(generatedAt, runId);
     const meta = {
       courseTitle: Render.courseTitle(document, input.source.title),
       sourceTitle: input.source.title,
@@ -41,6 +48,18 @@ var Generator = (function () {
     const models = Render.ROLES.map(function (role) {
       return Render.buildRoleDocument(document, role, meta);
     });
+    models.push(
+      Summary.buildSummaryDocument(estimate, {
+        courseTitle: meta.courseTitle,
+        sourceTitle: meta.sourceTitle,
+        sourceUrl: input.source.url,
+        generatedAt: meta.generatedAt,
+        runId: runId,
+        folderName: folderName,
+        parser: input.parser,
+        estimator: input.estimator,
+      }),
+    );
     const sourceSha256 = services.sha256Hex(input.extraction.text);
     const state = { folder: null, documents: [] };
 
@@ -58,12 +77,14 @@ var Generator = (function () {
         counts: run.counts,
         structure: run.structure,
         issues: run.issues,
+        estimator: input.estimator,
+        estimate: estimate,
         error: error === null ? null : messageOf(error),
       });
     }
 
     try {
-      state.folder = services.createFolder(Manifest.formatFolderName(generatedAt, runId), input.outputFolderId);
+      state.folder = services.createFolder(folderName, input.outputFolderId);
       models.forEach(function (model) {
         const created = services.createDocument(state.folder.id, model.title);
         // Record the document before writing to it, so a failed write still

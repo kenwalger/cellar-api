@@ -1,10 +1,13 @@
 # apps-script/
 
-A Google Apps Script project that reads the master course script from a Google Doc, validates it with the portable parser, and generates three role-specific Google Docs (ONSET, MOTION, and SCREENCAST) plus a JSON manifest. Each run gets a new Drive folder.
+A Google Apps Script project that reads the master course script from a Google Doc, validates it with the portable parser, and generates four Google Docs plus a JSON manifest. Three are role-specific (ONSET, MOTION, and SCREENCAST), and the fourth is a **Production Summary** with spoken-word counts, estimated narration time, and long-video warnings. Each run gets a new Drive folder.
 
-**Status: Phase 3B, implementation complete and tested offline.** All logic except the Google API calls is covered by Node tests that use test doubles. **Running it against a real Google account is a manual acceptance checkpoint that hasn't been completed yet.** See [Live verification checklist](#live-verification-checklist).
+**Status:**
 
-The Production Summary and duration estimates are Phase 4 and aren't included.
+- **Phase 3B (ONSET, MOTION, SCREENCAST, and the manifest):** implemented and tested offline. The project owner reported a successful live run in Google Docs. Item-by-item results and screenshots for the [checklist](#live-verification-checklist) haven't been recorded in the repository.
+- **Phase 4 (the estimator, the Production Summary, and manifest schema 2):** implemented and tested offline. **It hasn't been run in a live Google account yet.** See the [Phase 4 items](#phase-4-production-summary) in the checklist.
+
+All logic except the Google API calls is covered by Node tests that use test doubles.
 
 ## How it works
 
@@ -13,22 +16,26 @@ Master Google Doc
   → DocumentReader   paragraphs → text lines (+ line→paragraph map, extraction diagnostics)
   → ProductionScript the unchanged portable parser (IR + diagnostics)
   → Validation       blocks on errors; optional check against the expected course outline
+  → ProductionEstimator  the unchanged portable estimator: IR → word counts, durations, warnings
   → Render           IR → ONSET / MOTION / SCREENCAST document models
-  → Generator        new run folder → 3 Google Docs → manifest.json
+  → Summary          estimate → Production Summary document model
+  → Generator        new run folder → 4 Google Docs → manifest.json
 ```
 
-The parser decides what the document means. The adapter only reads text, writes documents, and records provenance. It never reinterprets the script.
+The parser decides what the document means, and the estimator does every calculation. The adapter only reads text, writes documents, and records provenance. It never reinterprets the script or recalculates an estimate.
 
 ## Files
 
 | File | Runs in | Purpose |
 |---|---|---|
 | `ProductionScript.js` | Both | **Generated.** A byte-for-byte copy of `parser/src/production-script.cjs`. |
-| `GeneratedData.js` | Both | **Generated.** The expected course structure (from `course/fixtures/expected-structure.json`), the parser version, and the SHA-256 of the parser core. |
-| `Config.js` | Both | Reads and validates Script Properties. |
+| `ProductionEstimator.js` | Both | **Generated.** A byte-for-byte copy of `production/src/production-estimator.cjs`. |
+| `GeneratedData.js` | Both | **Generated.** The expected course structure (from `course/fixtures/expected-structure.json`), plus the versions and SHA-256 hashes of the parser and estimator cores. |
+| `Config.js` | Both | Reads and validates Script Properties, including the estimator settings. |
 | `DocumentReader.js` | Both | Extracts text from a document body and reports unsupported content. |
 | `Validation.js` | Both | Parses, compares structure, decides generate/block, and formats the log report. |
 | `Render.js` | Both | Builds each role document's paragraphs from the IR. |
+| `Summary.js` | Both | Builds the Production Summary's paragraphs and the estimate log lines from the estimator's result. |
 | `Manifest.js` | Both | Folder naming, digest hex conversion, and the manifest object. |
 | `Generator.js` | Both | Orchestrates a run through an injected `services` object. |
 | `GoogleServices.js` | Apps Script | The only file that calls `DocumentApp`, `DriveApp`, and `Utilities`. |
@@ -38,7 +45,7 @@ The parser decides what the document means. The adapter only reads text, writes 
 
 "Both" means the file runs in Apps Script and is also loaded by the Node tests. Every `.js` file is a plain script that defines one global and has no `import`, `export`, or `require`, as Apps Script requires. Files can be loaded in any order, because each one refers to the others only inside functions.
 
-**Never edit the two generated files by hand.** After you change the parser core or the expected-structure fixture, run this from the repository root:
+**Never edit the three generated files by hand.** After you change the parser core, the estimator core, or the expected-structure fixture, run this from the repository root:
 
 ```bash
 node scripts/sync-apps-script.mjs           # regenerate
@@ -71,7 +78,9 @@ Create a standalone project at <https://script.google.com> with **New project**,
 2. Back in **Editor**, replace the contents of `appsscript.json` with this repository's `apps-script/appsscript.json`.
 3. Delete the default `Code.gs`.
 4. For each of these files, click **+** then **Script**, type the name without `.js` (the editor adds `.gs`), and paste in the file's full contents:
-   `ProductionScript`, `GeneratedData`, `Config`, `DocumentReader`, `Validation`, `Render`, `Manifest`, `Generator`, `GoogleServices`, `Main`.
+   `ProductionScript`, `ProductionEstimator`, `GeneratedData`, `Config`, `DocumentReader`, `Validation`, `Render`, `Summary`, `Manifest`, `Generator`, `GoogleServices`, `Main`.
+
+   **Upgrading a Phase 3B project:** add the two new files, `ProductionEstimator` and `Summary`, and replace the contents of every other file, because `GeneratedData`, `Config`, `Generator`, `Manifest`, `GoogleServices`, and `Main` all changed.
 5. Click **Save**.
 
 File order in the editor doesn't matter.
@@ -101,8 +110,13 @@ In **Project Settings** → **Script properties**, add:
 | `MASTER_DOCUMENT_ID` | Yes | The master Google Doc's ID or full URL |
 | `OUTPUT_FOLDER_ID` | No | A Drive folder ID or URL where run folders are created. The default is the top level of My Drive. |
 | `REQUIRE_EXPECTED_STRUCTURE` | No | `true` (the default) or `false`. See [Structural acceptance](#structural-acceptance). |
+| `WORDS_PER_MINUTE` | No | Assumed speaking rate for the Production Summary. A number greater than 0. Default `140`. |
+| `LONG_VIDEO_THRESHOLD_MINUTES` | No | A video is flagged when its estimate is **over** this many minutes. A number greater than 0. Default `3`. |
+| `SCREENCAST_ALLOWANCE_SECONDS_PER_SECTION` | No | Seconds added to the estimate for each SCREENCAST section. A number of 0 or more. Default `0`, which gives a narration-only estimate. |
 
 These values aren't secrets, but they identify your files, so they stay in your project and not in the repository. If a value is missing or malformed, both entry points stop with a configuration error before opening any document.
+
+The three estimator settings must be plain decimal numbers, such as `150` or `2.5`. Blank or unset means the default. Anything else is an error that names the property, including units (`140 wpm`), times (`3:00`), exponents (`1e3`), hexadecimal, `Infinity`, `NaN`, negative numbers, and a zero speaking rate or threshold. They're never silently replaced with the defaults. You never need to edit a script file to change them. The method behind them is described in [`production/README.md`](../production/README.md).
 
 ### 5. Authorize
 
@@ -127,9 +141,20 @@ Read N lines.
 Stages: 2, videos: 6, sections: 13 (ONSET 6, MOTION 3, SCREENCAST 4)
 Structure check: matches the expected structure (course/fixtures/expected-structure.json).
 READY: no errors. generateProductionDocuments() can run.
+Estimator configuration: 140 words per minute, long-video threshold 3 minutes, screencast allowance 0 seconds per SCREENCAST section.
+Stage 1, Video 1 "What Is an API?": 273 spoken words, estimated 1 min 57 s
+Stage 1, Video 2 "Requests and Responses": 287 spoken words, estimated 2 min 3 s
+Stage 1, Video 3 "Understanding JSON": 246 spoken words, estimated 1 min 45 s
+Stage 2, Video 1 "Making API Requests": 280 spoken words, estimated 2 min 0 s
+Stage 2, Video 2 "Handling Errors": 666 spoken words, estimated 4 min 45 s
+Stage 2, Video 3 "Wrapping Up": 228 spoken words, estimated 1 min 38 s
+Course estimate: 1980 spoken words, 14 min 9 s across 6 videos.
+WARNING LONG_VIDEO_ESTIMATE: Stage 2, Video 2 "Handling Errors": estimated 4 min 45 s is over the 3 min 0 s threshold (narration only).
 ```
 
 `N` is the number of lines read from the document. It can differ slightly from the Markdown file. For example, Docs may or may not keep a trailing empty paragraph.
+
+The estimate lines appear only when there are no errors. They come from the same estimator, with the same settings, that `generateProductionDocuments` uses. A `LONG_VIDEO_ESTIMATE` warning is information for the producer. It never blocks generation.
 
 ### 7. Inspect diagnostics
 
@@ -152,7 +177,7 @@ Parser codes are documented in [`parser/README.md`](../parser/README.md#diagnost
 
 ### 8. Generate
 
-Run `generateProductionDocuments`. It repeats the validation, and if there are errors it stops with *"Generation blocked ... No files were created."* Otherwise it logs:
+Run `generateProductionDocuments`. It repeats the validation, and if there are errors it stops with *"Generation blocked ... No files were created."* Otherwise it logs the estimate lines shown above, followed by:
 
 ```text
 COMPLETE: run 1a2b3c4d
@@ -160,6 +185,7 @@ Output folder: https://drive.google.com/drive/folders/...
 ONSET: https://docs.google.com/document/d/.../edit
 MOTION: https://docs.google.com/document/d/.../edit
 SCREENCAST: https://docs.google.com/document/d/.../edit
+PRODUCTION_SUMMARY: https://docs.google.com/document/d/.../edit
 Manifest: https://drive.google.com/file/d/.../view
 ```
 
@@ -194,6 +220,26 @@ Rendering rules:
 - **Spoken and unspoken text:** spoken text (ONSET narration and `VOICEOVER`) is plain black. Production instructions (`ACTION`, `VISUAL`, `HIGHLIGHT`) are gray italics.
 - **Cues:** a `[PAUSE]` cue is shown in bold dark red.
 - **Verbatim text:** every source line becomes one paragraph, unchanged. Blank lines stay as empty paragraphs. URLs and JSON are copied exactly. Nothing is summarized or reworded.
+
+The ONSET, MOTION, and SCREENCAST documents are unchanged by Phase 4. A test checks that the generator still writes exactly what `Render` produces.
+
+#### Production Summary
+
+The fourth document, titled `Production Summary — <course title> — <run ID>`, contains no script content. Every number in it comes from the estimator ([`production/README.md`](../production/README.md)). Its sections are:
+
+| Section | Contents |
+|---|---|
+| Title and provenance | Course title, subtitle, generation time, source document title and link, run ID, and a note that durations are estimates |
+| Estimator configuration | Words per minute, long-video threshold, screencast allowance, and estimator version |
+| Course overview | Stage, video, and section counts; total spoken words; estimated narration, screencast allowance, and total; videos over the threshold |
+| Video breakdown | For each stage (Heading 2) and video (Heading 3): section sequence, section counts, spoken words (with a note when some are URLs, paths, or code), narration, allowance, estimated total, and status against the threshold |
+| Warnings | One bold dark-red line per `LONG_VIDEO_ESTIMATE` warning, or a note saying no video is over the threshold under the current assumptions |
+| Estimation methodology | How words are counted, the speaking rate, the screencast allowance, the threshold rule, the rounding rule, and what the estimate leaves out |
+| Provenance | Run ID, generation time, run folder name, a pointer to `manifest.json`, and the parser and estimator versions and hashes |
+
+The document uses the same plain styles as the other three: built-in headings, normal text, and gray italics for notes. There are no tables, charts, or custom fonts. Durations are shown rounded to the nearest second (`4 min 45 s`). Calculations use the unrounded values.
+
+Parser warnings (diagnostics) aren't repeated in the Production Summary. They're in the execution log and in the manifest's `warnings`.
 
 `manifest.json` is described in [Manifest](#manifest).
 
@@ -242,11 +288,11 @@ Unsupported content is reported, never dropped silently, and nothing is repaired
 
 ## Manifest
 
-Each run folder contains `manifest.json` (`schemaVersion` 1):
+Each run folder contains `manifest.json` (`schemaVersion` 2):
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "status": "complete",
   "runId": "1a2b3c4d",
   "generatedAt": "2026-11-13T23:16:05.000Z",
@@ -259,6 +305,12 @@ Each run folder contains `manifest.json` (`schemaVersion` 1):
     "extractedLineCount": 401
   },
   "parser": { "version": "0.1.0", "coreSha256": "…64 hex characters…" },
+  "estimator": {
+    "schemaVersion": 1,
+    "version": "0.1.0",
+    "coreSha256": "…64 hex characters…",
+    "config": { "wordsPerMinute": 140, "longVideoThresholdMinutes": 3, "screencastAllowanceSecondsPerSection": 0 }
+  },
   "output": {
     "folderId": "…",
     "folderUrl": "https://drive.google.com/drive/folders/…",
@@ -266,12 +318,33 @@ Each run folder contains `manifest.json` (`schemaVersion` 1):
     "documents": [
       { "role": "ONSET", "id": "…", "title": "ONSET — Understanding APIs: A Winery's Digital Cellar — 1a2b3c4d", "url": "…", "status": "complete" },
       { "role": "MOTION", "id": "…", "title": "…", "url": "…", "status": "complete" },
-      { "role": "SCREENCAST", "id": "…", "title": "…", "url": "…", "status": "complete" }
+      { "role": "SCREENCAST", "id": "…", "title": "…", "url": "…", "status": "complete" },
+      { "role": "PRODUCTION_SUMMARY", "id": "…", "title": "Production Summary — …", "url": "…", "status": "complete" }
     ]
   },
   "counts": { "stages": 2, "videos": 6, "sections": { "ONSET": 6, "MOTION": 3, "SCREENCAST": 4, "total": 13 } },
   "structureCheck": { "checked": true, "matches": true },
   "warnings": [],
+  "estimate": {
+    "totals": {
+      "stageCount": 2,
+      "videoCount": 6,
+      "sectionCounts": { "ONSET": 6, "MOTION": 3, "SCREENCAST": 4 },
+      "spokenWordCount": 1980,
+      "technicalTokenCount": 7,
+      "narrationDurationSeconds": 848.5714285714286,
+      "screencastAllowanceSeconds": 0,
+      "estimatedDurationSeconds": 848.5714285714286,
+      "videosOverThreshold": 1
+    },
+    "videos": [
+      { "stageNumber": 1, "videoNumber": 1, "title": "What Is an API?", "spokenWordCount": 273, "technicalTokenCount": 0, "narrationDurationSeconds": 117, "screencastAllowanceSeconds": 0, "estimatedDurationSeconds": 117 },
+      "… one entry per video …"
+    ],
+    "warnings": [
+      { "code": "LONG_VIDEO_ESTIMATE", "stageNumber": 2, "videoNumber": 2, "title": "Handling Errors", "estimatedDurationSeconds": 285.42857142857144, "thresholdSeconds": 180, "includesScreencastAllowance": false }
+    ]
+  },
   "error": null
 }
 ```
@@ -281,22 +354,30 @@ Field notes:
 - **`source.extractedTextSha256`:** a hash of the exact text the parser received. Matching hashes mean identical parser input.
 - **`source.lastUpdated`:** the Drive last-modified time of the master document. DocumentApp doesn't expose a revision ID, so none is recorded.
 - **`parser.coreSha256`:** a hash of `parser/src/production-script.cjs`, computed by the sync script. It identifies the exact parser that ran.
-- **`warnings`:** warnings only, with their source, code, line, and message. A run with errors never generates.
+- **`warnings`:** parser and extraction warnings only, with their source, code, line, and message. A run with errors never generates.
+- **`estimator`:** the estimator output schema, the package version, the SHA-256 of `production/src/production-estimator.cjs`, and the configuration that was used. Together with `parser` and `source.extractedTextSha256`, this is enough to reproduce every number in the Production Summary offline.
+- **`estimate`:** unrounded numbers only: course totals, one entry per video, and the `LONG_VIDEO_ESTIMATE` warnings. Warning messages and methodology text are in the Production Summary, not here. Long-video warnings are separate from the diagnostic `warnings` above, and they never block generation.
 - **Content:** the manifest contains no document content.
+
+**Schema change from version 1 to 2 (Phase 4).** These are additions only: the `estimator` and `estimate` objects and a fourth `output.documents` entry with role `PRODUCTION_SUMMARY`. No version 1 field was removed or renamed. The version was raised because a reader that expects exactly three documents would otherwise misread a version 2 manifest.
 
 ## Failures
 
-Everything that can be checked is checked before the first write: configuration, document access, extraction, parsing, structure, and the output folder. All three documents are also rendered in memory before anything is created in Drive. If a Drive or Docs call still fails partway through:
+Everything that can be checked is checked before the first write: configuration (including the estimator settings), document access, extraction, parsing, structure, the production estimate, and the output folder. All four documents are also rendered in memory before anything is created in Drive. If the estimator rejects its settings or the document, the run stops with no folder created. If a Drive or Docs call still fails partway through:
 
 - The run **throws**, so the execution is shown as failed and never as complete.
-- If the run folder was created, a `manifest.json` with `"status": "failed"`, the error message, and every document created so far is written into it. Each document has `"status": "complete"` or `"incomplete"`. The folder is renamed with ` — FAILED` at the end.
+- If the run folder was created, a `manifest.json` with `"status": "failed"`, the error message, every document created so far, and the estimate is written into it. Each document has `"status": "complete"` or `"incomplete"`. The folder is renamed with ` — FAILED` at the end.
 - The log lists the partial folder and document URLs.
 - **Nothing is deleted.** Earlier runs are never touched, and a failed run's folder is never reused. Running again creates a new folder.
 - If a document was created but couldn't be moved into the run folder, the error message includes that document's URL. It will be in My Drive.
 
 ## Live verification checklist
 
-These steps need a person with a Google account, and **none of them has been done yet**. Record the results (and screenshots, per [`docs/learning-lab.md`](../docs/learning-lab.md)) before calling Phase 3B verified end to end.
+These steps need a person with a Google account. Record the results (and screenshots, per [`docs/learning-lab.md`](../docs/learning-lab.md)) in the repository.
+
+### Phase 3B: three role documents and the manifest
+
+**The project owner reported a successful live run of the Phase 3B workflow in Google Docs.** The item-by-item results and screenshots weren't supplied, so the boxes below are left for the owner to tick.
 
 - [ ] All script files load without a syntax error, and `ProductionScript.parseProductionScript` exists. This confirms the unchanged parser core runs on Apps Script V8.
 - [ ] Authorization succeeds with the two declared scopes.
@@ -309,10 +390,24 @@ These steps need a person with a Google account, and **none of them has been don
 - [ ] `manifest.json` is valid JSON with the fields above, and its URLs open the right files.
 - [ ] A second run creates a second folder, and the first run's files are unchanged.
 
+### Phase 4: Production Summary
+
+**None of these has been done yet.** Update the project files first (see [step 3](#3-add-the-script-files)).
+
+- [ ] `ProductionEstimator.js` and `Summary.js` load without a syntax error, and `ProductionEstimator.estimateProduction` exists. This confirms that the estimator core, including its Unicode regular expression, runs on Apps Script V8.
+- [ ] With no estimator properties set, `validateMasterDocument` logs the default configuration (140, 3, 0), the six per-video lines and course estimate shown in [step 6](#6-validate), and one `LONG_VIDEO_ESTIMATE` warning for Stage 2, Video 2.
+- [ ] Setting `WORDS_PER_MINUTE` to `fast` (or `0`) makes both entry points stop with a configuration error that names the property, and no folder is created.
+- [ ] `generateProductionDocuments` creates one folder containing **four** documents and `manifest.json`, and logs a `PRODUCTION_SUMMARY` URL.
+- [ ] The ONSET, MOTION, and SCREENCAST documents look the same as in a Phase 3B run.
+- [ ] The Production Summary has the [sections described above](#production-summary), its numbers match the validation log, the warning line is bold dark red, and it's readable without the manifest.
+- [ ] `manifest.json` has `"schemaVersion": 2`, an `estimator` object whose `coreSha256` equals `GeneratedData.estimatorCoreSha256`, and four `output.documents`.
+- [ ] Setting `WORDS_PER_MINUTE` to `230` removes the warning, and setting `SCREENCAST_ALLOWANCE_SECONDS_PER_SECTION` to `60` flags Stage 1, Video 2 and Stage 2, Video 2, but not Stage 2, Video 1, which lands at exactly 180 s. Each change gives a new run folder, and earlier runs are unchanged.
+
 ## Limitations
 
 - **Read only from the body:** headers, footers, footnote text, and comments aren't read, and multi-tab documents are rejected.
-- **Unchecked formatting:** the output formatting (heading styles and colors) has been specified but not yet seen in a real document.
+- **Unchecked formatting:** the Production Summary's formatting has been specified but not yet seen in a real document.
+- **Estimates, not measurements:** the Production Summary's durations come from a fixed speaking rate and an optional fixed allowance. See [`production/README.md`](../production/README.md#what-the-estimate-leaves-out).
 - **Execution time:** generation runs inside Apps Script's per-execution time limit, about six minutes for consumer accounts. The six-video course is far below it.
 - **Broad scope:** the `drive` scope covers all of the user's Drive files.
 - **Time zone:** run folder timestamps are UTC, regardless of your time zone.

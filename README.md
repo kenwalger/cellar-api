@@ -7,13 +7,13 @@ The running example is a fictional video course, *Understanding APIs: A Winery's
 To be clear about what's what:
 
 - **The winery API is the subject of the course.** It's a deliberately small teaching fixture, not a winery management system.
-- **Document automation is what this lab teaches.** The eventual goal is to parse a master course script (a Google Doc) into four separate Google Docs:
+- **Document automation is what this lab teaches.** The tooling parses a master course script (a Google Doc) into four separate Google Docs:
   1. **ONSET**: presenter narration and teleprompter content.
   2. **MOTION**: motion graphics instructions and voiceover.
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 3B implemented.** The FastAPI application, the master course script, a portable JavaScript parser, and Google Apps Script tooling that generates the ONSET, MOTION, and SCREENCAST documents from a Google Doc exist today. Everything is tested offline. **The Apps Script tooling hasn't been run against a live Google account yet**; that's a manual checkpoint. The Production Summary is planned for Phase 4. See [docs/roadmap.md](docs/roadmap.md).
+> **Status: Phase 4 implemented.** The FastAPI application, the master course script, a portable JavaScript parser, a portable production estimator, and Google Apps Script tooling that generates all four documents from a Google Doc exist today. Everything is tested offline. The project owner reported a successful live Google Docs run of the Phase 3B workflow (the first three documents and the manifest). **The Phase 4 Production Summary hasn't been run in a live Google account yet**; that's a manual checkpoint. See [docs/roadmap.md](docs/roadmap.md).
 
 ## What's in the repository
 
@@ -24,7 +24,8 @@ To be clear about what's what:
 - A six-video master course script, [`course/master-script.md`](course/master-script.md), tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]` sections. See [course/README.md](course/README.md) for its grammar.
 - Parser test fixtures: an expected-structure oracle and isolated malformed-script cases in [`course/fixtures/`](course/fixtures/).
 - A dependency-free JavaScript parser, [`parser/`](parser/README.md). It turns the script into a structured intermediate representation with source line numbers, reports structural problems as diagnostics, and is tested with Node's built-in test runner.
-- A Google Apps Script project, [`apps-script/`](apps-script/README.md). It reads the master Google Doc, validates it with the unchanged parser, and generates ONSET, MOTION, and SCREENCAST Google Docs plus a provenance manifest in a new folder for each run. Its logic is tested offline with test doubles.
+- A dependency-free JavaScript production estimator, [`production/`](production/README.md). It reads the parser's IR, counts spoken words with a documented policy, estimates narration time at a configurable speaking rate, and flags videos over a configurable threshold. It never reparses the script.
+- A Google Apps Script project, [`apps-script/`](apps-script/README.md). It reads the master Google Doc, validates it with the unchanged parser, and generates ONSET, MOTION, SCREENCAST, and Production Summary Google Docs plus a provenance manifest in a new folder for each run. Its logic is tested offline with test doubles.
 - Project documentation.
 
 ## Architecture
@@ -40,15 +41,20 @@ parser/
 ├── src/production-script.cjs   portable parser core (no Node or browser APIs)
 ├── src/index.js                Node.js ESM entry point
 └── tests/                      node:test suites
+production/
+├── src/production-estimator.cjs  portable estimator core (no Node or browser APIs)
+├── src/index.js                  Node.js ESM entry point
+└── tests/                        node:test suites
+apps-script/                    Google Apps Script adapter (see its README)
 ```
 
-Routes in `main.py` call plain functions in `repository.py`. The repository has no HTTP dependencies, so it can be tested on its own. The parser is independent of the API. It reads production-script text and returns an IR and diagnostics. See [docs/architecture.md](docs/architecture.md) for more detail, including the Google Docs workflow.
+Routes in `main.py` call plain functions in `repository.py`. The repository has no HTTP dependencies, so it can be tested on its own. The parser is independent of the API. It reads production-script text and returns an IR and diagnostics. The estimator reads that IR and returns word counts, duration estimates, and warnings. See [docs/architecture.md](docs/architecture.md) for more detail, including the Google Docs workflow.
 
 ## Prerequisites
 
 - Python 3.11 or newer (`.python-version` pins 3.12 for local development)
 - [uv](https://docs.astral.sh/uv/)
-- Node.js 22 or newer, for the parser and Apps Script tests only. There are no npm packages to install.
+- Node.js 22 or newer, for the parser, estimator, and Apps Script tests only. There are no npm packages to install.
 - A Google account, only for running the Apps Script tooling in Google (see [apps-script/README.md](apps-script/README.md)).
 
 You don't need a database, a network connection, or any external service.
@@ -181,11 +187,22 @@ npm run print-ir -- ../course/master-script.md    # print the IR and diagnostics
 
 See [parser/README.md](parser/README.md) for the IR, the diagnostic codes, and error recovery.
 
+### Production estimator
+
+```bash
+cd production
+npm test                                                  # run the estimator tests
+npm run print-estimate -- ../course/master-script.md      # print the estimate as JSON
+npm run print-estimate -- ../course/master-script.md '{"wordsPerMinute": 160}'
+```
+
+See [production/README.md](production/README.md) for the word-count policy, the duration method, the warning rule, and the master script's figures. At the defaults (140 words per minute, a three-minute threshold, and no screencast allowance), the course has 1980 spoken words, about 14 min 9 s of narration, and one long video: Stage 2, Video 2.
+
 ### Apps Script adapter
 
 ```bash
 cd apps-script && npm test                       # adapter tests (offline, no Google account)
-node scripts/sync-apps-script.mjs --check        # parser copy and generated data match their sources
+node scripts/sync-apps-script.mjs --check        # parser and estimator copies and generated data match their sources
 ```
 
 To run the tooling in Google, follow [apps-script/README.md](apps-script/README.md).
@@ -194,8 +211,8 @@ To run the tooling in Google, follow [apps-script/README.md](apps-script/README.
 
 - The data is read from a static JSON file. Edits take effect only after a restart.
 - There's no authentication, persistence, pagination, or write access. These are deliberate omissions for a teaching fixture.
-- The Apps Script tooling is tested offline only. It hasn't been run against a real Google account yet (see the live checklist in [apps-script/README.md](apps-script/README.md#live-verification-checklist)).
-- The Production Summary document and duration estimates are not implemented yet (Phase 4).
+- The Production Summary hasn't been run against a real Google account yet (see the live checklist in [apps-script/README.md](apps-script/README.md#live-verification-checklist)). The Phase 3B documents were reported working in a live run by the project owner.
+- Durations in the Production Summary are estimates from a fixed speaking rate, not predictions of finished video length. See [production/README.md](production/README.md#what-the-estimate-leaves-out).
 
 ## Roadmap
 
@@ -203,8 +220,8 @@ To run the tooling in Google, follow [apps-script/README.md](apps-script/README.
 2. **Phase 2: Master course script** (done), a six-video course tagged with `[ONSET]`, `[MOTION]`, and `[SCREENCAST]`
 3. **Phase 3: Document parser**
    - **3A: Portable parser and validation** (done)
-   - **3B: Google Docs integration** (implemented; live check pending): an Apps Script adapter and generation of the three section docs
-4. **Phase 4: Production summary and learning lab**
+   - **3B: Google Docs integration** (done; live run reported by the project owner): an Apps Script adapter and generation of the three section docs
+4. **Phase 4: Production summary** (implemented; live check pending): a portable estimator and the fourth document. The full learning-lab walkthrough and screenshots are still to come.
 
 Details are in [docs/roadmap.md](docs/roadmap.md). The planned hands-on tutorial is outlined in [docs/learning-lab.md](docs/learning-lab.md).
 

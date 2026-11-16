@@ -36,8 +36,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Script Properties configuration (`MASTER_DOCUMENT_ID`, `OUTPUT_FOLDER_ID`, `REQUIRE_EXPECTED_STRUCTURE`). There are no triggers.
   - 67 offline `node:test` tests using Body and Drive test doubles. No npm dependencies.
 - `scripts/sync-apps-script.mjs` generates `apps-script/ProductionScript.js` (a byte-for-byte copy of the parser core) and `apps-script/GeneratedData.js`, and `--check` detects drift.
+- Portable production estimator in `production/` (Phase 4):
+  - `estimateProduction(document, options)` reads the parser IR (it never reparses) and returns per-video, per-stage, and course word counts and durations, `LONG_VIDEO_ESTIMATE` warnings, the configuration used, and coded assumption statements (output schema version 1). Durations are unrounded. Totals are exact sums of the video values.
+  - Spoken words come only from ONSET text and `VOICEOVER` blocks. Content with an unknown section, block, or item type, or an unclosed section, is refused instead of guessed at.
+  - Documented word-count policy: a word is a whitespace-separated token with at least one Unicode letter or digit. A per-video `technicalTokenCount` flags URLs, paths, and code in narration. The master script's counts (273, 287, 246, 280, 666, 228; 1980 in total) match the Phase 2 reference figures exactly.
+  - Configuration: `wordsPerMinute` (140), `longVideoThresholdMinutes` (3), and `screencastAllowanceSecondsPerSection` (0, a narration-only baseline). Non-numeric, non-finite, zero-rate, zero-threshold, and negative values, and unknown fields, throw `RangeError`. They never fall back to the defaults.
+  - Videos strictly over the threshold are flagged. At the defaults, only Stage 2, Video 2 is (about 4 min 45 s).
+  - A host-neutral core (`src/production-estimator.cjs`), an ESM wrapper, a `print-estimate` script, and 75 `node:test` tests (word count, classification, configuration, boundaries, reconciliation, non-mutation, determinism, master-script acceptance, and `vm` portability). No npm dependencies.
+- Production Summary generation in `apps-script/` (Phase 4):
+  - `Summary.js` builds a fourth Google Doc, `Production Summary — <course> — <run id>`, with provenance, estimator configuration, course overview, per-stage and per-video breakdown, warnings (or an explicit "none"), methodology and exclusions, and run provenance.
+  - `apps-script/ProductionEstimator.js` is generated as a byte-for-byte copy of the estimator core. `GeneratedData.js` gains `estimatorVersion` and `estimatorCoreSha256`.
+  - Script Properties `WORDS_PER_MINUTE`, `LONG_VIDEO_THRESHOLD_MINUTES`, and `SCREENCAST_ALLOWANCE_SECONDS_PER_SECTION` (plain decimals only, validated before any document is opened).
+  - `validateMasterDocument()` and `generateProductionDocuments()` log the active estimator configuration, per-video estimates, the course total, and warnings.
+  - Production Summary recipes in `docs/learning-lab.md` (Exercises 6 and 7: change the speaking rate, add a screencast allowance).
 
 ### Changed
+
+- `generateProductionDocuments()` now creates four documents. The estimate is calculated and every document rendered before the first Drive write, so invalid estimator settings, or a document the estimator refuses, create no folder. Long-video warnings never block generation. The ONSET, MOTION, and SCREENCAST documents are unchanged.
+- The generation manifest moves to **schema version 2**. It adds an `estimator` object (output schema, version, core SHA-256, configuration), an `estimate` object (totals, per-video figures, and long-video warnings, with numbers only), and a `PRODUCTION_SUMMARY` entry in `output.documents`. No version 1 field was removed or renamed. Failure manifests also carry the estimate.
+- `scripts/sync-apps-script.mjs` also generates and drift-checks `apps-script/ProductionEstimator.js`.
+- CI runs the estimator tests (`npm test` in `production/`). The drift check covers the estimator copy.
+- `README.md`, `CLAUDE.md`, `docs/architecture.md`, `docs/roadmap.md`, `docs/learning-lab.md`, `apps-script/README.md`, `course/README.md`, and `parser/README.md` updated for Phase 4. They record the project owner's report of a successful live Phase 3B run and add a Phase 4 live checklist, which hasn't been run yet.
+- `docs/learning-lab.md`: removed a duplicated copy of Exercise 5. `CLAUDE.md`: removed a duplicated "Google Apps Script" conventions section.
 
 - CI gains a `parser` job (Node.js 22, `npm test`). The Python job is unchanged.
 - The CI `parser` job also runs the Apps Script adapter tests and the drift check.

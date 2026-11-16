@@ -6,6 +6,10 @@
  * - OUTPUT_FOLDER_ID (optional): Drive folder ID or URL for run folders. Default: My Drive.
  * - REQUIRE_EXPECTED_STRUCTURE (optional): "true" (default) or "false". When true,
  *   the document must match the course outline in GeneratedData.expectedStructure.
+ * - WORDS_PER_MINUTE (optional, default 140), LONG_VIDEO_THRESHOLD_MINUTES
+ *   (optional, default 3), and SCREENCAST_ALLOWANCE_SECONDS_PER_SECTION
+ *   (optional, default 0): Production Summary estimator settings, as plain
+ *   decimal numbers such as 150 or 2.5.
  *
  * None of these values is secret.
  */
@@ -15,6 +19,14 @@ var Config = (function () {
   const ID_PATTERN = /^[A-Za-z0-9_-]{20,}$/;
   const DOCUMENT_URL_PATTERN = /\/document\/d\/([A-Za-z0-9_-]+)/;
   const FOLDER_URL_PATTERN = /\/folders\/([A-Za-z0-9_-]+)/;
+  // Plain decimals only: no exponents, hex, units, or "Infinity".
+  const DECIMAL_PATTERN = /^[+-]?(\d+(\.\d*)?|\.\d+)$/;
+  // Script Property name → estimator option name.
+  const ESTIMATE_PROPERTIES = {
+    WORDS_PER_MINUTE: "wordsPerMinute",
+    LONG_VIDEO_THRESHOLD_MINUTES: "longVideoThresholdMinutes",
+    SCREENCAST_ALLOWANCE_SECONDS_PER_SECTION: "screencastAllowanceSecondsPerSection",
+  };
 
   function isBlank(value) {
     return value === undefined || value === null || String(value).trim() === "";
@@ -66,6 +78,8 @@ var Config = (function () {
       }
     }
 
+    const estimate = readEstimateOptions(properties, errors);
+
     if (errors.length > 0) {
       return { config: null, errors: errors };
     }
@@ -74,9 +88,39 @@ var Config = (function () {
         masterDocumentId: masterDocumentId,
         outputFolderId: outputFolderId,
         requireExpectedStructure: requireExpectedStructure,
+        estimate: estimate,
       },
       errors: [],
     };
+  }
+
+  // Starts from the estimator's defaults and applies any properties that are
+  // set. Range checks come from the estimator itself, so the rules match.
+  function readEstimateOptions(properties, errors) {
+    const estimate = {};
+    Object.keys(ProductionEstimator.DEFAULT_OPTIONS).forEach(function (option) {
+      estimate[option] = ProductionEstimator.DEFAULT_OPTIONS[option];
+    });
+    Object.keys(ESTIMATE_PROPERTIES).forEach(function (property) {
+      if (isBlank(properties[property])) {
+        return;
+      }
+      const option = ESTIMATE_PROPERTIES[property];
+      const text = String(properties[property]).trim();
+      if (!DECIMAL_PATTERN.test(text)) {
+        errors.push(`${property} must be a plain decimal number, such as 150 or 2.5, not "${text}".`);
+        return;
+      }
+      const single = {};
+      single[option] = Number(text);
+      const problems = ProductionEstimator.checkOptions(single);
+      if (problems.length > 0) {
+        errors.push(`${property}: ${problems.join(" ")}`);
+        return;
+      }
+      estimate[option] = single[option];
+    });
+    return estimate;
   }
 
   return { readConfig: readConfig };

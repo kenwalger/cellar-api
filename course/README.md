@@ -13,7 +13,7 @@ This directory holds the master production script for the fictional course **Und
 
 The course is aimed at beginning developers who have never called a web API. It uses the Digital Cellar API in [`api/`](../api) to teach requests, responses, JSON, query parameters, and status codes.
 
-The script also serves a second purpose. It's the primary test document for the document automation lab. A single master document holds instructions for three production teams, and the planned tooling will split it into separate documents for each of them.
+The script also serves a second purpose. It's the primary test document for the document automation lab. A single master document holds instructions for three production teams, and the tooling in `apps-script/` splits it into separate documents for each of them, plus a Production Summary.
 
 ## Course outline
 
@@ -33,7 +33,7 @@ The script also serves a second purpose. It's the primary test document for the 
 | 2 | Handling Errors | ONSET, MOTION, SCREENCAST, ONSET |
 | 3 | Wrapping Up | ONSET |
 
-Stage 2, Video 2 is deliberately the longest video. It covers 200, 404, and 422 responses in depth so that, at the planned default speaking rate of about 140 words per minute, it exceeds the Production Summary's planned three-minute long-video threshold. The other videos are much shorter. The script doesn't contain any durations. Timing is a Phase 4 calculation.
+Stage 2, Video 2 is deliberately the longest video. It covers 200, 404, and 422 responses in depth so that, at the default speaking rate of 140 words per minute, it exceeds the Production Summary's default three-minute long-video threshold (666 spoken words, about 4 min 45 s). The other videos are much shorter. The script doesn't contain any durations. Timing is calculated by the estimator in [`production/`](../production/README.md).
 
 ## Script grammar
 
@@ -83,7 +83,7 @@ Rules:
 
 ### Spoken words versus non-spoken content
 
-The planned timing estimate counts only spoken words:
+The timing estimate ([`production/`](../production/README.md)) counts only spoken words:
 
 - **Counted:** prose in ONSET sections and the content of `[VOICEOVER]` blocks.
 - **Not counted:** `[ACTION]`, `[VISUAL]`, and `[HIGHLIGHT]` content, which includes URLs, commands, and JSON examples. Headings, front matter, and the tags themselves are also not counted.
@@ -128,11 +128,11 @@ The screencasts use Swagger UI at `http://127.0.0.1:8000/docs`. The 422 demonstr
 
 ## Production artifacts
 
-The parser in [`parser/`](../parser) (Phase 3A) reads and validates the script. The Apps Script tooling in [`apps-script/`](../apps-script) (Phase 3B) reads the script from a Google Doc and generates the first three documents below. The Production Summary is planned for Phase 4.
+The parser in [`parser/`](../parser) (Phase 3A) reads and validates the script. The Apps Script tooling in [`apps-script/`](../apps-script) (Phase 3B) reads the script from a Google Doc and generates the four documents below. The Production Summary (Phase 4) is built from the estimator in [`production/`](../production).
 
 - **ONSET**: presenter narration for the teleprompter.
 - **MOTION**: visual instructions and voiceover for the motion designer.
 - **SCREENCAST**: actions and voiceover for the screen recording.
-- **Production Summary** *(planned, Phase 4)*: estimated duration per video, content statistics, a configurable long-video warning (default three minutes), and validation findings.
+- **Production Summary** *(Phase 4)*: spoken-word counts, estimated narration duration per video, section counts, a configurable long-video warning (default three minutes), and the estimation method and its limits.
 
-The ONSET, MOTION, and SCREENCAST generators are implemented and tested offline. Running them against a real Google account is a manual checkpoint (see [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist)). See [`docs/roadmap.md`](../docs/roadmap.md).
+All four generators are implemented and tested offline. The project owner reported a successful live run of the ONSET, MOTION, and SCREENCAST generation. The Production Summary hasn't been run in a live Google account yet (see [`apps-script/README.md`](../apps-script/README.md#live-verification-checklist)). See [`docs/roadmap.md`](../docs/roadmap.md).

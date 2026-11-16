@@ -14,8 +14,10 @@ const expectedGlobals = [
   "GeneratedData",
   "GoogleServices",
   "Manifest",
+  "ProductionEstimator",
   "ProductionScript",
   "Render",
+  "Summary",
   "Validation",
   // Main.js: manual entry points and private helpers (trailing underscore).
   "generateProductionDocuments",

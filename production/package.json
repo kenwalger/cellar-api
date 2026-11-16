@@ -1,0 +1,16 @@
+{
+  "name": "production-estimator",
+  "version": "0.1.0",
+  "description": "Portable, deterministic production estimator for the Digital Cellar master production script.",
+  "private": true,
+  "license": "MIT",
+  "author": "Ken W. Alger",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "print-estimate": "node src/print-estimate.js"
+  }
+}

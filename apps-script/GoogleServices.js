@@ -17,6 +17,8 @@ var GoogleServices = (function () {
     cue: { bold: true, italic: false, color: "#9C2A00" },
     provenance: { bold: false, italic: true, color: "#666666" },
     note: { bold: false, italic: true, color: "#666666" },
+    // Production Summary (see Summary.js). "fact" paragraphs use the default style.
+    warning: { bold: true, italic: false, color: "#9C2A00" },
   };
 
   /** Opens the master document. Read-only: makes no Drive or Docs writes. */

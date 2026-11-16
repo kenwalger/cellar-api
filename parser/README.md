@@ -1,8 +1,8 @@
 # parser/
 
-A portable JavaScript parser and validator for the master production script, [`course/master-script.md`](../course/master-script.md). It turns the script into a deterministic **intermediate representation (IR)** plus a list of **diagnostics**. Later phases will generate the ONSET, MOTION, SCREENCAST, and Production Summary documents from that IR.
+A portable JavaScript parser and validator for the master production script, [`course/master-script.md`](../course/master-script.md). It turns the script into a deterministic **intermediate representation (IR)** plus a list of **diagnostics**. The Apps Script tooling generates the ONSET, MOTION, and SCREENCAST documents from that IR, and the estimator in [`production/`](../production) uses it for the Production Summary.
 
-**Status: Phase 3A. Implemented and tested offline with Node.js.** The Google Docs adapter that uses it is in [`apps-script/`](../apps-script) (Phase 3B). The parser itself doesn't estimate timing.
+**Status: Phase 3A. Implemented and tested offline with Node.js.** The Google Docs adapter that uses it is in [`apps-script/`](../apps-script) (Phase 3B). The parser itself doesn't estimate timing. That's done by [`production/`](../production) (Phase 4), which reads the IR without changing the parser.
 
 ## Layout
 

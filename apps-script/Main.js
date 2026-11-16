@@ -8,7 +8,8 @@
 
 /**
  * Reads and validates the master document, then logs counts, the structure
- * check, and every diagnostic. Makes no Drive or Docs writes.
+ * check, every diagnostic, and (if there are no errors) the production
+ * estimate with its configuration. Makes no Drive or Docs writes.
  *
  * @returns {boolean} True if generation could proceed.
  */
@@ -16,13 +17,14 @@ function validateMasterDocument() {
   const config = loadConfig_();
   const prepared = readAndValidate_(config);
   logLines_(Validation.formatReport(prepared.source, prepared.run));
+  logEstimate_(prepared.run, config);
   return prepared.run.canGenerate;
 }
 
 /**
  * Validates the master document and, only if there are no errors, creates a
- * new run folder with the ONSET, MOTION, and SCREENCAST documents and a
- * manifest. Earlier runs are never changed.
+ * new run folder with the ONSET, MOTION, SCREENCAST, and Production Summary
+ * documents and a manifest. Earlier runs are never changed.
  */
 function generateProductionDocuments() {
   const config = loadConfig_();
@@ -31,6 +33,7 @@ function generateProductionDocuments() {
   if (!prepared.run.canGenerate) {
     throw new Error("Generation blocked by the errors listed above. No files were created.");
   }
+  logEstimate_(prepared.run, config);
 
   // Check everything we can before the first write.
   GoogleServices.checkOutputFolder(config.outputFolderId);
@@ -49,6 +52,8 @@ function generateProductionDocuments() {
       run: prepared.run,
       outputFolderId: config.outputFolderId,
       parser: { version: GeneratedData.parserVersion, coreSha256: GeneratedData.parserCoreSha256 },
+      estimator: { version: GeneratedData.estimatorVersion, coreSha256: GeneratedData.estimatorCoreSha256 },
+      estimateOptions: config.estimate,
     });
   } catch (error) {
     if (error.result) {
@@ -85,6 +90,15 @@ function readAndValidate_(config) {
     expectedStructure: GeneratedData.expectedStructure,
   });
   return { source: source, extraction: extraction, run: run };
+}
+
+// Logs the estimate for a document that can generate. Settings were already
+// checked by Config, so this throws only if the document can't be estimated.
+function logEstimate_(run, config) {
+  if (!run.canGenerate) {
+    return;
+  }
+  logLines_(Summary.formatLogLines(ProductionEstimator.estimateProduction(run.parse.document, config.estimate)));
 }
 
 function logFailure_(result) {
