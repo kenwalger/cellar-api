@@ -13,8 +13,6 @@ To be clear about what's what:
   3. **SCREENCAST**: screen recording instructions and narration.
   4. **Production Summary**: per-video duration estimates, content statistics, and configurable long-video warnings.
 
-> **Status: Phase 5 implemented: a [developer learning lab](docs/lab/README.md).** The FastAPI application, the master course script, a portable JavaScript parser, a portable production estimator, and Google Apps Script tooling that generates all four documents from a Google Doc exist today. Everything is tested offline. The project owner reported successful live Google Docs runs of Phase 3B and Phase 4 (run `6146a211`). **The Phase 4b cleanup hasn't been run in a live Google account yet.** It changes how SCREENCAST examples and PAUSE cues are rendered, adds a Production Summary overview table, and revises the status-code narration. That's a manual checkpoint (see [apps-script/README.md](apps-script/README.md#phase-4b-cleanup-and-final-acceptance)). The learning lab's screenshots haven't been captured yet. See [docs/roadmap.md](docs/roadmap.md).
-
 ## Learning lab
 
 **Start with [the learning lab](docs/lab/README.md).** Five guided exercises (about an hour, with no Google account or paid service) take you through the master script, the parser and its diagnostics, a deliberately broken copy, the duration estimate and its assumptions, and the provenance manifest. An optional sixth exercise generates the four Google Docs in your own account. You need Git, Node.js 22+, and a terminal.
